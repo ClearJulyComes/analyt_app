@@ -7,7 +7,11 @@
     },
     {
       "src": "api/analyze.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": { 
+        "maxLambdaSize": "25mb",
+        "includeFiles": "api/requirements.txt"
+      }
     }
   ],
   "routes": [
