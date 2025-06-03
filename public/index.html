@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Analytics</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome, <span id="user-name">User</span>!</h1>
+        <p>Select a chat to analyze:</p>
+        <button id="analyze-btn" class="apple-button">Analyze Chat</button>
+        <div id="result" class="result-container"></div>
+        <p id="loading-text">Analyzing messages... This may take a moment.</p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
