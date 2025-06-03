@@ -1,42 +1,56 @@
 class AuthHelper {
     static async getPhoneNumber() {
         console.log("[DEBUG] Checking initDataUnsafe.user:", Telegram.WebApp.initDataUnsafe.user);
-        
-        // Method 1: Check if already available
+
+        // Method 1: Already available
         const tgUser = Telegram.WebApp.initDataUnsafe.user;
         if (tgUser?.phone_number) {
             console.log("[DEBUG] Found phone in initData:", tgUser.phone_number);
             return tgUser.phone_number;
         }
 
-        // Method 2: Request via Telegram UI
+        // Method 2: Ask via popup
         console.log("[DEBUG] Requesting phone via popup");
+
         return new Promise((resolve) => {
+            let resolved = false;
+
+            const timeout = setTimeout(() => {
+                if (!resolved) {
+                    console.log("[DEBUG] Phone request timeout");
+                    resolved = true;
+                    resolve(null);
+                }
+            }, 5000);
+
             Telegram.WebApp.showPopup({
                 title: "Phone Required",
                 message: "Please share your phone number",
-                buttons: [{
-                    type: "default",
-                    text: "Share Phone",
-                    callback: () => {
-                        console.log("[DEBUG] Share button clicked");
-                        // This forces the Mini App to open in native Telegram
-                        Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot");
-                        
-                        // Alternative fallback
-                        window.location.href = "https://t.me/analyt_app_bot?start=phone";
+                buttons: [
+                    {
+                        id: "share",
+                        type: "default",
+                        text: "Share Phone"
                     }
-                }]
+                ]
+            }, (buttonId) => {
+                if (resolved) return;
+
+                resolved = true;
+                clearTimeout(timeout);
+
+                if (buttonId === "share") {
+                    console.log("[DEBUG] Share button clicked");
+                    Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot");
+                    window.location.href = "https://t.me/analyt_app_bot?start=phone";
+                }
+
+                resolve(null); // no phone yet; phone will come in later via new initData
             });
-            
-            // Fallback after 5 seconds
-            setTimeout(() => {
-                console.log("[DEBUG] Phone request timeout");
-                resolve(null);
-            }, 5000);
         });
     }
 }
+
 
 // Add debug prints to all functions
 async function analyzeRealChat() {
