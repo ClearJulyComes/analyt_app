@@ -1,6 +1,6 @@
 class AuthHelper {
     static async getPhoneNumber() {
-        console.log("[DEBUG] Checking initDataUnsafe.user:", Telegram.WebApp.initDataUnsafe.user);
+        alert("[DEBUG] Checking initDataUnsafe.user:", Telegram.WebApp.initDataUnsafe.user);
 
         // Method 1: Already available
         const tgUser = Telegram.WebApp.initDataUnsafe.user;
@@ -10,7 +10,7 @@ class AuthHelper {
         }
 
         // Method 2: Ask via popup
-        console.log("[DEBUG] Requesting phone via popup");
+        alert("[DEBUG] Requesting phone via popup");
 
         return new Promise((resolve) => {
             let resolved = false;
@@ -40,9 +40,17 @@ class AuthHelper {
                 clearTimeout(timeout);
 
                 if (buttonId === "share") {
-                    console.log("[DEBUG] Share button clicked");
-                    Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot");
-                    window.location.href = "https://t.me/analyt_app_bot?start=phone";
+                    alert("[DEBUG] Share button clicked");
+                    const isTelegram = typeof Telegram !== 'undefined' && Telegram.WebApp;
+
+                    
+                    if (isTelegram) {
+                        Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot");
+                    } else {
+                        // For Chrome debugging
+                        window.location.href = "https://t.me/analyt_app_bot?start=phone";
+                    }
+
                 }
 
                 resolve(null); // no phone yet; phone will come in later via new initData
