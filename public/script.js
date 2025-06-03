@@ -20,16 +20,11 @@ class AuthHelper {
                     text: "Share Phone",
                     callback: () => {
                         console.log("[DEBUG] Share button clicked");
-                        // New: Use contact request API
-                        Telegram.WebApp.sendData(JSON.stringify({
-                            action: "request_contact"
-                        }));
+                        // This forces the Mini App to open in native Telegram
+                        Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot");
                         
-                        Telegram.WebApp.onEvent('contactReceived', (data) => {
-                            const phone = JSON.parse(data).phone_number;
-                            console.log("[DEBUG] Received phone:", phone);
-                            resolve(phone);
-                        });
+                        // Alternative fallback
+                        window.location.href = "https://t.me/analyt_app_bot?start=phone";
                     }
                 }]
             });
