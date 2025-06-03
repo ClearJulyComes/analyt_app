@@ -43,13 +43,13 @@ class AuthHelper {
                     alert("[DEBUG] Share button clicked");
                     const isTelegram = typeof Telegram !== 'undefined' && Telegram.WebApp;
 
-                    
-                    if (isTelegram) {
-                        Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot");
-                    } else {
+
+                    // if (isTelegram) {
+                    Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot?start=webapp_phone");
+                    // } else {
                         // For Chrome debugging
-                        window.location.href = "https://t.me/analyt_app_bot?start=phone";
-                    }
+                    // window.location.href = "https://t.me/analyt_app_bot?start=phone";
+                    // }
 
                 }
 
@@ -72,15 +72,16 @@ async function analyzeRealChat() {
 
         console.log("[DEBUG] Getting phone number");
         const phone = await AuthHelper.getPhoneNumber();
-        if (!phone) throw new Error("Phone number required");
-        console.log("[DEBUG] Using phone:", phone);
+        // if (!phone) throw new Error("Phone number required");
+        alert("[DEBUG] Using phone:", phone);
+        alert(Telegram.WebApp.initDataUnsafe.user.phone_number);
 
         console.log("[DEBUG] Requesting chat ID");
         const chatId = await promptForChatId();
         console.log("[DEBUG] Analyzing chat:", chatId);
         
         console.log("[DEBUG] Calling API");
-        const analysis = await fetchAnalysis(phone, chatId);
+        const analysis = await fetchAnalysis(Telegram.WebApp.initDataUnsafe.user.phone_number, chatId);
         console.log("[DEBUG] Analysis result:", analysis);
         
         displayResults(analysis);
@@ -96,6 +97,48 @@ async function analyzeRealChat() {
         loading.style.display = 'none';
         console.log("[DEBUG] Analysis completed");
     }
+}
+
+// Helper functions
+async function promptForChatId() {
+    // In a real app, implement proper chat selection UI
+    return prompt("Enter numeric chat ID (User ID or Group ID with -):");
+}
+
+async function fetchAnalysis(phone, chatId) {
+    alert('Fetch analysis')
+    const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            phone: phone,
+            chat_id: parseInt(chatId),
+            limit: 100
+        })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json();
+}
+
+function displayResults(data) {
+// Format results
+    result.innerHTML = `
+        <div class="analysis-card">
+            <h3>Chat Analysis</h3>
+            <div class="metric">
+                <span class="metric-title">Conversation starters:</span>
+                <span class="metric-value">${Object.entries(data.starter_stats).map(([k,v]) => `User ${k}: ${v}`).join(', ')}</span>
+            </div>
+            <div class="metric">
+                <span class="metric-title">Message counts:</span>
+                <span class="metric-value">${Object.entries(data.message_count).map(([k,v]) => `User ${k}: ${v}`).join(', ')}</span>
+            </div>
+            <div class="metric">
+                <span class="metric-title">Total analyzed:</span>
+                <span class="metric-value">${data.total_messages} messages</span>
+            </div>
+        </div>
+    `;
 }
 
 // Update event listener with debug
