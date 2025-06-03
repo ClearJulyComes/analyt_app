@@ -1,37 +1,51 @@
 class AuthHelper {
-    static async function getPhoneNumber() {
-    // Method 1: Check if already available
-    const tgUser = Telegram.WebApp.initDataUnsafe.user;
-    if (tgUser?.phone_number) {
-        return tgUser.phone_number;
-    }
-
-    // Method 2: Request via Telegram UI (working solution)
-    return new Promise((resolve) => {
-        Telegram.WebApp.showPopup({
-            title: "Phone Required",
-            message: "Please open in Telegram app to share your number",
-            buttons: [{
-                type: "default",
-                text: "Open in Telegram",
-                callback: () => {
-                    print('Request phone in Telegram')
-                    // This forces the Mini App to open in native Telegram
-                    Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot");
-                    
-                    // Alternative fallback
-                    window.location.href = "https://t.me/analyt_app_bot?start=phone";
-                }
-            }]
-        });
+    static async getPhoneNumber() {
+        console.log("[DEBUG] Checking initDataUnsafe.user:", Telegram.WebApp.initDataUnsafe.user);
         
-        // Fallback after 5 seconds
-        setTimeout(() => resolve(null), 5000);
-    });
-}
+        // Method 1: Check if already available
+        const tgUser = Telegram.WebApp.initDataUnsafe.user;
+        if (tgUser?.phone_number) {
+            console.log("[DEBUG] Found phone in initData:", tgUser.phone_number);
+            return tgUser.phone_number;
+        }
+
+        // Method 2: Request via Telegram UI
+        console.log("[DEBUG] Requesting phone via popup");
+        return new Promise((resolve) => {
+            Telegram.WebApp.showPopup({
+                title: "Phone Required",
+                message: "Please share your phone number",
+                buttons: [{
+                    type: "default",
+                    text: "Share Phone",
+                    callback: () => {
+                        console.log("[DEBUG] Share button clicked");
+                        // New: Use contact request API
+                        Telegram.WebApp.sendData(JSON.stringify({
+                            action: "request_contact"
+                        }));
+                        
+                        Telegram.WebApp.onEvent('contactReceived', (data) => {
+                            const phone = JSON.parse(data).phone_number;
+                            console.log("[DEBUG] Received phone:", phone);
+                            resolve(phone);
+                        });
+                    }
+                }]
+            });
+            
+            // Fallback after 5 seconds
+            setTimeout(() => {
+                console.log("[DEBUG] Phone request timeout");
+                resolve(null);
+            }, 5000);
+        });
+    }
 }
 
+// Add debug prints to all functions
 async function analyzeRealChat() {
+    console.log("[DEBUG] analyzeRealChat started");
     const loading = document.getElementById('loading');
     const result = document.getElementById('result');
     
@@ -39,20 +53,23 @@ async function analyzeRealChat() {
         loading.style.display = 'block';
         result.innerHTML = '';
 
-        // 1. Get authenticated phone
+        console.log("[DEBUG] Getting phone number");
         const phone = await AuthHelper.getPhoneNumber();
         if (!phone) throw new Error("Phone number required");
+        console.log("[DEBUG] Using phone:", phone);
 
-        // 2. Get target chat (simplified - should be UI selection)
+        console.log("[DEBUG] Requesting chat ID");
         const chatId = await promptForChatId();
+        console.log("[DEBUG] Analyzing chat:", chatId);
         
-        // 3. Call analysis API
+        console.log("[DEBUG] Calling API");
         const analysis = await fetchAnalysis(phone, chatId);
+        console.log("[DEBUG] Analysis result:", analysis);
         
-        // 4. Display results
         displayResults(analysis);
         
     } catch (error) {
+        console.error("[ERROR]", error);
         result.innerHTML = `
             <div class="error">
                 ${error.message || "Analysis failed"}
@@ -60,50 +77,12 @@ async function analyzeRealChat() {
         `;
     } finally {
         loading.style.display = 'none';
+        console.log("[DEBUG] Analysis completed");
     }
 }
 
-// Helper functions
-async function promptForChatId() {
-    // In a real app, implement proper chat selection UI
-    return prompt("Enter numeric chat ID (User ID or Group ID with -):");
-}
-
-async function fetchAnalysis(phone, chatId) {
-    print('Fetch analysis')
-    const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            phone: phone,
-            chat_id: parseInt(chatId),
-            limit: 100
-        })
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return response.json();
-}
-
-function displayResults(data) {
-// Format results
-    result.innerHTML = `
-        <div class="analysis-card">
-            <h3>Chat Analysis</h3>
-            <div class="metric">
-                <span class="metric-title">Conversation starters:</span>
-                <span class="metric-value">${Object.entries(data.starter_stats).map(([k,v]) => `User ${k}: ${v}`).join(', ')}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-title">Message counts:</span>
-                <span class="metric-value">${Object.entries(data.message_count).map(([k,v]) => `User ${k}: ${v}`).join(', ')}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-title">Total analyzed:</span>
-                <span class="metric-value">${data.total_messages} messages</span>
-            </div>
-        </div>
-    `;
-}
-
-// Update event listener
-document.getElementById('analyze-btn').addEventListener('click', analyzeRealChat);
+// Update event listener with debug
+document.getElementById('analyze-btn').addEventListener('click', () => {
+    console.log("[DEBUG] Analyze button clicked");
+    analyzeRealChat().catch(console.error);
+});
