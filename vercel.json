@@ -25,6 +25,11 @@
       "methods": ["POST"]
     },
     {
+      "src": "/api/analyze",
+      "dest": "/api/telegram/analyze.py",
+      "methods": ["POST"]
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }
