@@ -11,8 +11,6 @@ async def analyze_messages(phone, chat_id, limit=100):
         api_id=int(os.getenv('TELEGRAM_API_ID')),
         api_hash=os.getenv('TELEGRAM_API_HASH')
     )
-
-    print(f"DEBUG: {datetime.now()} - Received request from {phone}")
     
     await client.start(phone)
     
