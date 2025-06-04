@@ -175,3 +175,5 @@ def webhook(request):
             'statusCode': 500,
             'body': json.dumps({'error': str(e)})
         }
+
+app = webhook
