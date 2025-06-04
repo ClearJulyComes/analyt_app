@@ -5,6 +5,7 @@ import json, os, asyncio
 from telethon.sessions import StringSession
 from collections import defaultdict
 from datetime import datetime, timedelta
+import httpx
 
 async def analyze_messages(phone, chat_id, limit=100):
     client = TelegramClient(
