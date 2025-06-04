@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "functions": {
+    "api/telegram/*.py": {
+      "runtime": "python@3.11"
+    }
+  },
   "builds": [
     {
       "src": "public/**",
