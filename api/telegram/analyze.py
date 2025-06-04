@@ -3,10 +3,11 @@ from telethon.sync import TelegramClient
 from telethon.tl.types import InputPeerUser
 import json, os, asyncio
 from datetime import datetime
+from telethon.sessions import StringSession
 
 async def analyze_messages(phone, chat_id, limit=100):
     client = TelegramClient(
-        session=':memory:',  # No session storage
+        session=StringSession(os.getenv("TELEGRAM_SESSION_STRING")),
         api_id=int(os.getenv('TELEGRAM_API_ID')),
         api_hash=os.getenv('TELEGRAM_API_HASH')
     )
