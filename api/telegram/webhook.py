@@ -136,14 +136,14 @@ async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 def setup_application():
     """Configure bot handlers"""
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     
     # Command handlers
     app.add_handler(CommandHandler("start", handle_start))
     
     # Message handlers
     app.add_handler(MessageHandler(filters.CONTACT, handle_contact))
-    app.add_handler(MessageHandler(filters.WEB_APP_DATA, handle_webapp_data))
+    app.add_handler(MessageHandler(filters.TEXT & filters.Regex(".*"), handle_webapp_data))
     
     return app
 
@@ -162,16 +162,13 @@ async def process_webhook(request_data: dict):
         await app.shutdown()
 
 def webhook(request):
-    """Vercel serverless entry point"""
     try:
-        # Parse incoming request
         request_data = request.get_json()
-        
-        # Process asynchronously
-        asyncio.run(process_webhook(request_data))
-        
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(process_webhook(request_data))
+
         return {'statusCode': 200, 'body': 'OK'}
-    
+
     except Exception as e:
         print(f"Webhook error: {str(e)}")
         return {
