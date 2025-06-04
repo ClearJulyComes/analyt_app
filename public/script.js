@@ -87,18 +87,38 @@ async function fetchAnalysis(phone, chatId) {
 }
 
 function displayResults(data) {
-// Format results
+    const formatStats = (stats, label) => {
+        return Object.entries(stats)
+            .map(([user, value]) => `<div>User <strong>${user}</strong>: ${value}</div>`)
+            .join('');
+    };
+
     result.innerHTML = `
         <div class="analysis-card">
             <h3>Chat Analysis</h3>
+
             <div class="metric">
                 <span class="metric-title">Conversation starters:</span>
-                <span class="metric-value">${Object.entries(data.starter_stats).map(([k,v]) => `User ${k}: ${v}`).join(', ')}</span>
+                <div class="metric-value">
+                    ${formatStats(data.starter_stats, 'Starter')}
+                </div>
             </div>
+
             <div class="metric">
                 <span class="metric-title">Message counts:</span>
-                <span class="metric-value">${Object.entries(data.message_count).map(([k,v]) => `User ${k}: ${v}`).join(', ')}</span>
+                <div class="metric-value">
+                    ${formatStats(data.message_count, 'Messages')}
+                </div>
             </div>
+
+            ${data.sentiment_stats ? `
+            <div class="metric">
+                <span class="metric-title">Sentiment Analysis:</span>
+                <div class="metric-value">
+                    ${formatStats(data.sentiment_stats, 'Sentiment')}
+                </div>
+            </div>` : ''}
+
             <div class="metric">
                 <span class="metric-title">Total analyzed:</span>
                 <span class="metric-value">${data.total_messages} messages</span>
@@ -106,6 +126,7 @@ function displayResults(data) {
         </div>
     `;
 }
+
 
 // Update event listener with debug
 document.getElementById('analyze-btn').addEventListener('click', () => {
