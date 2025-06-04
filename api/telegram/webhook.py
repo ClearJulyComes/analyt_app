@@ -136,30 +136,30 @@ async def handle_webapp_data(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 def setup_application():
     """Configure bot handlers"""
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    telegram_app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     
     # Command handlers
-    app.add_handler(CommandHandler("start", handle_start))
+    telegram_app.add_handler(CommandHandler("start", handle_start))
     
     # Message handlers
-    app.add_handler(MessageHandler(filters.CONTACT, handle_contact))
-    app.add_handler(MessageHandler(filters.TEXT & filters.Regex(".*"), handle_webapp_data))
+    telegram_app.add_handler(MessageHandler(filters.CONTACT, handle_contact))
+    telegram_app.add_handler(MessageHandler(filters.TEXT & filters.Regex(".*"), handle_webapp_data))
     
-    return app
+    return telegram_app
 
-app = setup_application()
+telegram_app = setup_application()
 
 async def process_webhook(request_data: dict):
     """Process incoming webhook update"""
     try:
-        await app.initialize()
-        update = Update.de_json(request_data, app.bot)
-        await app.process_update(update)
+        await telegram_app.initialize()
+        update = Update.de_json(request_data, telegram_app.bot)
+        await telegram_app.process_update(update)
     except Exception as e:
         print(f"Webhook processing error: {str(e)}")
         raise
     finally:
-        await app.shutdown()
+        await telegram_app.shutdown()
 
 def webhook(request):
     try:
