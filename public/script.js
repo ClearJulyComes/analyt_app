@@ -115,7 +115,7 @@ function displayResults(data) {
             <div class="metric">
                 <span class="metric-title">Sentiment Analysis:</span>
                 <div class="metric-value">
-                    ${formatStats(data.sentiment_stats, 'Sentiment')}
+                    ${formatStats(data.sentiment_summary, 'Sentiment')}
                 </div>
             </div>` : ''}
 

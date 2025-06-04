@@ -36,6 +36,7 @@ async def analyze_messages(phone, chat_id, limit=100):
 
         last_timestamp = None
         idle_threshold = timedelta(minutes=30)
+        sentiment = get_sentiments_summary(messages)
 
         for i, msg in enumerate(messages):
             sender = msg['sender_id']
@@ -45,10 +46,6 @@ async def analyze_messages(phone, chat_id, limit=100):
             # Count messages
             message_counts[sender] += 1
 
-            # Sentiment analysis
-            sentiment = await get_sentiment(text)
-            sentiment_counts[sender][sentiment] += 1
-
             # Conversation starter logic
             if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
                 starter_counts[sender] += 1
@@ -57,10 +54,7 @@ async def analyze_messages(phone, chat_id, limit=100):
         return {
             'message_count': format_stats(message_counts),
             'starter_stats': format_stats(starter_counts),
-            'sentiment_breakdown': {
-                sender: format_stats(sentiments)
-                for sender, sentiments in sentiment_counts.items()
-            },
+            'sentiment_summary': await sentiment,
             'total_messages': len(messages)
         }
 
@@ -95,9 +89,26 @@ def format_stats(stats):
     total = sum(stats.values())
     return {k: f"{v} ({v/total:.0%})" for k, v in stats.items()}
 
-async def get_sentiment(text: str) -> str:
-    """Call DeepSeek LLM to analyze sentiment of a message."""
-    prompt = f"Classify the sentiment of this message as 'positive', 'neutral', or 'negative':\n\n{text}"
+async def get_sentiments_summary(messages):
+    from collections import defaultdict
+
+    grouped = defaultdict(list)
+    for msg in messages:
+        if msg['text'].strip():
+            grouped[msg['sender_id']].append(msg['text'])
+
+    user_blocks = [
+        f"User {user_id}:\n" + "\n".join(f"- {text}" for text in texts)
+        for user_id, texts in grouped.items()
+    ]
+
+    prompt = (
+        "You will be given a list of users with their messages. For each user, estimate their overall sentiment "
+        "as a score from 0% (very negative) to 100% (very positive). Also include a label like 'negative', 'neutral', or 'positive'.\n"
+        "Return a JSON object with this format:\n"
+        "{\n  \"user_id\": \"label - score%\"\n}\n\n"
+        "Messages:\n\n" + "\n\n".join(user_blocks)
+    )
 
     headers = {
         "Authorization": f"Bearer {os.getenv('DEEPSEEK_API_KEY')}",
@@ -105,32 +116,12 @@ async def get_sentiment(text: str) -> str:
     }
 
     payload = {
-        "model": "deepseek-chat",  # Adjust if you use another model name
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
+        "model": "deepseek-chat",
+        "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3
     }
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://api.deepseek.com/v1/chat/completions",
-            headers=headers,
-            json=payload,
-            timeout=20.0
-        )
-
-        if response.status_code != 200:
-            print(f"[DeepSeek] Error: {response.status_code} - {response.text}")
-            return "neutral"
-
-        result = response.json()
-        reply = result["choices"][0]["message"]["content"].strip().lower()
-
-        # Normalize output
-        if "positive" in reply:
-            return "positive"
-        elif "negative" in reply:
-            return "negative"
-        else:
-            return "neutral"
+            headers=head
