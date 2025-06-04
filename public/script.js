@@ -117,6 +117,9 @@ function displayResults(data) {
                 <div class="metric-value">
                     ${formatStats(data.sentiment_summary, 'Sentiment')}
                 </div>
+                <div class="metric-value">
+                    ${formatStats(data.sentiment_explanation, 'Explanation')}
+                </div>
             </div>` : ''}
 
             <div class="metric">
