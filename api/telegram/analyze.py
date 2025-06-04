@@ -7,6 +7,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import httpx
 import logging
+import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -111,7 +112,7 @@ async def get_sentiments_summary(messages):
         "You will be given a list of users and their recent messages. For each user:\n"
         "1. Estimate their overall sentiment score (0% = negative, 100% = positive).\n"
         "2. Add a label: 'negative', 'neutral', or 'positive'.\n"
-        "3. If messages are in a different language, respond in that language.\n"
+        "3. If the majority of the messages are in a language other than English (e.g. Russian), explanation in your response — MUST be in that same language.\n"
         "4. Return JSON only with structure:\n"
         "{users: [ {user1: 'label - score%'}, ... ], explanation: '...'}\n\n"
         "Messages:\n\n" + "\n\n".join(user_blocks)
@@ -143,7 +144,8 @@ async def get_sentiments_summary(messages):
         try:
             logger.info("[DeepSeek] Raw response: %s", response.text)
             content = response.json()["choices"][0]["message"]["content"]
-            parsed = json.loads(content)
+            cleaned = re.sub(r"^```json\s*|\s*```$", "", content.strip(), flags=re.DOTALL)
+            parsed = json.loads(cleaned)
 
             # Convert users list into {user_id: sentiment} dict
             sentiment_map = {}
