@@ -124,4 +124,20 @@ async def get_sentiments_summary(messages):
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://api.deepseek.com/v1/chat/completions",
-            headers=head
+            headers=headers,
+            json=payload,
+            timeout=120.0  # long enough for batch
+        )
+
+        if response.status_code != 200:
+            print(f"[DeepSeek] Error: {response.status_code} - {response.text}")
+            return {}
+
+        content = response.json()["choices"][0]["message"]["content"]
+
+        try:
+            result = json.loads(content)
+            return {int(k): v for k, v in result.items()}
+        except Exception as e:
+            print(f"[DeepSeek] Failed to parse DeepSeek response: {e}\n{content}")
+            return {}
