@@ -54,7 +54,7 @@ async def analyze_messages(phone, chat_id, limit=100):
         return {
             'message_count': format_stats(message_counts),
             'starter_stats': format_stats(starter_counts),
-            'sentiment_summary': sentiment,
+            'sentiment_summary': sentiment_summary,
             'sentiment_explanation': explanation,
             'total_messages': len(messages)
         }
