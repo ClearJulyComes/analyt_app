@@ -111,14 +111,12 @@ function displayResults(data) {
                 </div>
             </div>
 
-            <div class="metric">
-                <span class="metric-title">Sentiment Analysis:</span>
-                <div class="metric-value">
-                    ${formatStats(data.sentiment_summary, 'Sentiment')}
-                </div>
-                <div class="metric-value">
-                    ${data.sentiment_explanation}
-                </div>
+            <div class="metric metric-flex">
+              <span class="metric-title">Sentiment Analysis:</span>
+              <div class="metric-details">
+                <div class="metric-summary">${formatStats(data.sentiment_summary, 'Sentiment')}</div>
+                <div class="metric-explanation">${data.sentiment_explanation}</div>
+              </div>
             </div>
 
             <div class="metric">
