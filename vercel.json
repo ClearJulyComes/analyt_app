@@ -14,16 +14,6 @@
     }
   ],
   "routes": [
-    // {
-    //   "src": "/api/webhook",
-    //   "dest": "/api/telegram/webhook.py",
-    //   "methods": ["POST"]
-    // },
-    // {
-    //   "src": "/api/validate",
-    //   "dest": "/api/telegram/validate.py",
-    //   "methods": ["POST"]
-    // },
     {
       "src": "/api/analyze",
       "dest": "/api/telegram/analyze.py",
