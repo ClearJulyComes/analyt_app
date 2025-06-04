@@ -2,23 +2,11 @@
   "version": 2,
   "functions": {
     "api/telegram/*.py": {
-      "runtime": "python@3.11"
+      "runtime": "python@3.9",
+      "maxDuration": 10,
+      "memory": 512
     }
   },
-  "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/telegram/*.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "25mb",
-        "includeFiles": "api/telegram/requirements.txt"
-      }
-    }
-  ],
   "routes": [
     {
       "src": "/api/webhook",
