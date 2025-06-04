@@ -2,8 +2,9 @@ from http.server import BaseHTTPRequestHandler
 from telethon.sync import TelegramClient
 from telethon.tl.types import InputPeerUser
 import json, os, asyncio
-from datetime import datetime
 from telethon.sessions import StringSession
+from collections import defaultdict
+from datetime import datetime, timedelta
 
 async def analyze_messages(phone, chat_id, limit=100):
     client = TelegramClient(
