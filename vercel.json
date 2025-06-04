@@ -6,18 +6,23 @@
       "use": "@vercel/static"
     },
     {
-      "src": "api/analyze.py",
+      "src": "api/telegram/*.py",
       "use": "@vercel/python",
-      "config": { 
+      "config": {
         "maxLambdaSize": "25mb",
-        "includeFiles": "api/requirements.txt"
+        "includeFiles": "api/telegram/requirements.txt"
       }
     }
   ],
   "routes": [
     {
-      "src": "/api/analyze",
-      "dest": "/api/analyze.py"
+      "src": "/api/webhook",
+      "dest": "/api/telegram/webhook.py",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/validate",
+      "dest": "/api/telegram/validate.py"
     },
     {
       "src": "/(.*)",

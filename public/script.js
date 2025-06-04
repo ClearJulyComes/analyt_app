@@ -45,7 +45,7 @@ class AuthHelper {
 
 
                     // if (isTelegram) {
-                    Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot?start=webapp_phone");
+                    Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot&start=webapp");
                     // } else {
                         // For Chrome debugging
                     // window.location.href = "https://t.me/analyt_app_bot?start=phone";
@@ -59,6 +59,20 @@ class AuthHelper {
     }
 }
 
+async function validateInitData() {
+    const response = await fetch('/api/validate', {
+        method: 'POST',
+        body: Telegram.WebApp.initData
+    });
+    
+    const { valid, user } = await response.json();
+    if (valid) {
+        console.log("Authenticated user:", user);
+        analyzeRealChat();
+    } else {
+        Telegram.WebApp.showAlert("Authentication failed");
+    }
+}
 
 // Add debug prints to all functions
 async function analyzeRealChat() {
@@ -144,5 +158,5 @@ function displayResults(data) {
 // Update event listener with debug
 document.getElementById('analyze-btn').addEventListener('click', () => {
     console.log("[DEBUG] Analyze button clicked");
-    analyzeRealChat().catch(console.error);
+    validateInitData().catch(console.error);
 });
