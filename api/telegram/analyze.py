@@ -40,7 +40,7 @@ async def analyze_messages(phone, chat_id, limit=100):
         starter_counts = defaultdict(int)
 
         last_timestamp = None
-        idle_threshold = timedelta(minutes=30)
+        idle_threshold = timedelta(minutes=60)
         sentiment_summary, explanation = await get_sentiments_summary(messages)
 
         for i, msg in enumerate(messages):

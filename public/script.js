@@ -111,7 +111,6 @@ function displayResults(data) {
                 </div>
             </div>
 
-            ${data.sentiment_summary ? `
             <div class="metric">
                 <span class="metric-title">Sentiment Analysis:</span>
                 <div class="metric-value">
@@ -120,7 +119,7 @@ function displayResults(data) {
                 <div class="metric-value">
                     ${data.sentiment_explanation}
                 </div>
-            </div>` : ''}
+            </div>
 
             <div class="metric">
                 <span class="metric-title">Total analyzed:</span>
