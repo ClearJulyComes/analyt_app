@@ -45,7 +45,7 @@ async def analyze_messages(phone, chat_id, limit=100):
             message_counts[sender] += 1
 
             # Sentiment analysis
-            sentiment = get_sentiment(text)
+            sentiment = await get_sentiment(text)
             sentiment_counts[sender][sentiment] += 1
 
             # Conversation starter logic
