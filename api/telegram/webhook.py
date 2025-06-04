@@ -1,14 +1,16 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes
+from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters  # Missing imports
+import os  # Missing import
+import asyncio  # Missing import
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.web_app_data:
         # Validate data from Mini App
         init_data = update.message.web_app_data.data
-        if validate_webapp_init_data(init_data, token=os.getenv('BOT_TOKEN')):
+        if validate_webapp_init_data(init_data, token=os.getenv('TELEGRAM_BOT_TOKEN')):
             await process_analysis(update)
 
-app = ApplicationBuilder().token(os.getenv('BOT_TOKEN')).build()
+app = ApplicationBuilder().token(os.getenv('TELEGRAM_BOT_TOKEN')).build()
 app.add_handler(MessageHandler(filters.WEB_APP_DATA, handle_message))
 
 def webhook(request):

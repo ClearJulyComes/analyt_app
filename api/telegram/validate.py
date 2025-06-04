@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler
 from telegram.utils.webapp import validate_webapp_init_data
 import os
@@ -10,7 +12,7 @@ class handler(BaseHTTPRequestHandler):
         try:
             is_valid = validate_webapp_init_data(
                 init_data,
-                token=os.getenv('BOT_TOKEN')
+                token=os.getenv('TELEGRAM_BOT_TOKEN')
             )
             
             self.send_response(200 if is_valid else 403)

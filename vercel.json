@@ -22,7 +22,8 @@
     },
     {
       "src": "/api/validate",
-      "dest": "/api/telegram/validate.py"
+      "dest": "/api/telegram/validate.py",
+      "methods": ["POST"]
     },
     {
       "src": "/(.*)",
