@@ -40,11 +40,9 @@ async function analyzeRealChat() {
         console.log("[DEBUG] Getting phone number");
         const phone = await AuthHelper.getPhoneNumber();
         if (!phone) throw new Error("Phone number required");
-        alert("[DEBUG] Using phone:", phone);
 
         console.log("[DEBUG] Requesting chat ID");
         const chatId = await promptForChatId();
-        alert("[DEBUG] Analyzing chat:", chatId);
         
         console.log("[DEBUG] Calling API");
         const analysis = await fetchAnalysis(phone, chatId);
@@ -72,7 +70,6 @@ async function promptForChatId() {
 }
 
 async function fetchAnalysis(phone, chatId) {
-    alert('Fetch analysis' + phone + ' ' + chatId)
     const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -111,12 +108,12 @@ function displayResults(data) {
                 </div>
             </div>
 
-            <div class="metric metric-flex">
-              <span class="metric-title">Sentiment Analysis:</span>
-              <div class="metric-details">
-                <div class="metric-summary">${formatStats(data.sentiment_summary, 'Sentiment')}</div>
-                <div class="metric-explanation">${data.sentiment_explanation}</div>
+            <div class="metric metric-flex-column">
+              <div class="metric-row">
+                <span class="metric-title">Sentiment Analysis:</span>
+                <div class="metric-value sentiment-summary">${formatStats(data.sentiment_summary, 'Sentiment')}</div>
               </div>
+              <div class="metric-explanation">${data.sentiment_explanation}</div>
             </div>
 
             <div class="metric">

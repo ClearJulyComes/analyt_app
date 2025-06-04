@@ -104,31 +104,41 @@ h1 {
 }
 
 /* Special layout for Sentiment Analysis: two columns, right column stacked */
-.metric-flex {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.metric-flex .metric-title {
-  flex: 0 0 170px;
-  padding-top: 4px; /* align vertically with top of right block */
-}
-
-.metric-details {
-  flex: 1;
+.metric-flex-column {
   display: flex;
   flex-direction: column;
+  margin: 12px 0 24px; /* same spacing as others */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 12px;
 }
 
-.metric-summary {
+/* Row for label + summary on same line */
+.metric-flex-column .metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px; /* space between summary and explanation */
+}
+
+/* Use existing styles for label and value */
+.metric-flex-column .metric-title {
   font-weight: 500;
-  margin-bottom: 6px;
+  color: var(--system-gray);
+  flex: 0 0 170px;
 }
 
-.metric-explanation {
+.metric-flex-column .sentiment-summary {
+  font-weight: 600;
+  color: var(--system-blue);
+  flex: 1;
+  text-align: right;
+}
+
+/* Explanation spans full width below */
+.metric-flex-column .metric-explanation {
   font-size: 0.9rem;
   color: #666;
-  white-space: pre-wrap; /* preserves line breaks */
+  white-space: pre-wrap; /* preserve line breaks */
   line-height: 1.4;
+  padding-left: 170px; /* align with start of summary */
 }
