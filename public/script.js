@@ -60,18 +60,18 @@ class AuthHelper {
 }
 
 async function validateInitData() {
-    const response = await fetch('/api/validate', {
-        method: 'POST',
-        headers: {'Content-Type': 'text/plain'},
-        body: Telegram.WebApp.initData
-    });
+    // const response = await fetch('/api/validate', {
+    //     method: 'POST',
+    //     headers: {'Content-Type': 'text/plain'},
+    //     body: Telegram.WebApp.initData
+    // });
     
-    const { valid, user } = await response.json();
-    if (valid) {
-        analyzeRealChat();
-    } else {
-        Telegram.WebApp.showAlert("Authentication failed");
-    }
+    // const { valid, user } = await response.json();
+    // if (valid) {
+    analyzeRealChat();
+    // } else {
+    //     Telegram.WebApp.showAlert("Authentication failed");
+    // }
 }
 
 // Add debug prints to all functions
