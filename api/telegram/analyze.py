@@ -6,6 +6,10 @@ from telethon.sessions import StringSession
 from collections import defaultdict
 from datetime import datetime, timedelta
 import httpx
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 async def analyze_messages(phone, chat_id, limit=100):
     client = TelegramClient(
@@ -137,9 +141,9 @@ async def get_sentiments_summary(messages):
             return {}
 
         try:
+            logger.info("[DeepSeek] Raw response: %s", response.text)
             content = response.json()["choices"][0]["message"]["content"]
             parsed = json.loads(content)
-            print(f"DeepSeek response: {parsed}")
 
             # Convert users list into {user_id: sentiment} dict
             sentiment_map = {}
