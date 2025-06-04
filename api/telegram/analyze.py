@@ -139,6 +139,7 @@ async def get_sentiments_summary(messages):
         try:
             content = response.json()["choices"][0]["message"]["content"]
             parsed = json.loads(content)
+            print(f"DeepSeek response: {parsed}")
 
             # Convert users list into {user_id: sentiment} dict
             sentiment_map = {}

@@ -111,14 +111,14 @@ function displayResults(data) {
                 </div>
             </div>
 
-            ${data.sentiment_stats ? `
+            ${data.sentiment_summary ? `
             <div class="metric">
                 <span class="metric-title">Sentiment Analysis:</span>
                 <div class="metric-value">
                     ${formatStats(data.sentiment_summary, 'Sentiment')}
                 </div>
                 <div class="metric-value">
-                    ${formatStats(data.sentiment_explanation, 'Explanation')}
+                    ${data.sentiment_explanation}
                 </div>
             </div>` : ''}
 
