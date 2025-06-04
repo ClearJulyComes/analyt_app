@@ -62,6 +62,9 @@ class AuthHelper {
 async function validateInitData() {
     const response = await fetch('/api/validate', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'  // Important!
+        },
         body: Telegram.WebApp.initData
     });
     
