@@ -44,7 +44,7 @@ async function analyzeRealChat() {
 
         console.log("[DEBUG] Requesting chat ID");
         const chatId = await promptForChatId();
-        console.log("[DEBUG] Analyzing chat:", chatId);
+        alert("[DEBUG] Analyzing chat:", chatId);
         
         console.log("[DEBUG] Calling API");
         const analysis = await fetchAnalysis(phone, chatId);
@@ -72,7 +72,7 @@ async function promptForChatId() {
 }
 
 async function fetchAnalysis(phone, chatId) {
-    alert('Fetch analysis')
+    alert('Fetch analysis' + phone + ' ' + chatId)
     const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
