@@ -90,6 +90,10 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_error(500, f"Analysis failed: {str(e)}")
 
+def format_stats(stats):
+    total = sum(stats.values())
+    return {k: f"{v} ({v/total:.0%})" for k, v in stats.items()}
+
 async def get_sentiment(text: str) -> str:
     """Call DeepSeek LLM to analyze sentiment of a message."""
     prompt = f"Classify the sentiment of this message as 'positive', 'neutral', or 'negative':\n\n{text}"
