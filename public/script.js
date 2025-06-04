@@ -45,7 +45,7 @@ class AuthHelper {
 
 
                     // if (isTelegram) {
-                    Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot&start=webapp");
+                    Telegram.WebApp.openTelegramLink("tg://resolve?domain=analyt_app_bot&start=webapp_phone");
                     // } else {
                         // For Chrome debugging
                     // window.location.href = "https://t.me/analyt_app_bot?start=phone";
@@ -60,21 +60,18 @@ class AuthHelper {
 }
 
 async function validateInitData() {
-    // const response = await fetch('/api/validate', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'text/plain'  // Important!
-    //     },
-    //     body: Telegram.WebApp.initData
-    // });
+    const response = await fetch('/api/validate', {
+        method: 'POST',
+        headers: {'Content-Type': 'text/plain'},
+        body: Telegram.WebApp.initData
+    });
     
-    // const { valid, user } = await response.json();
-    // if (valid) {
-    //     console.log("Authenticated user:", user);
-    analyzeRealChat();
-    // } else {
-    //     Telegram.WebApp.showAlert("Authentication failed");
-    // }
+    const { valid, user } = await response.json();
+    if (valid) {
+        analyzeRealChat();
+    } else {
+        Telegram.WebApp.showAlert("Authentication failed");
+    }
 }
 
 // Add debug prints to all functions
