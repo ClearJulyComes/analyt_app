@@ -26,8 +26,8 @@ async def create_session(phone, code, phone_code_hash, password):
     try:
         client = TelegramClient(StringSession(), api_id, api_hash)
         await client.connect()
-        await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash.decode())
-        
+        await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash)
+
         return {client.session.save(), await client.get_me()}
     except SessionPasswordNeededError:
         if not password:
