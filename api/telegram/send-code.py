@@ -17,10 +17,18 @@ redis = Redis(
 async def create_session(phone):
     async with TelegramClient(StringSession(), api_id, api_hash) as client:
         await client.connect()
-        if not client.is_user_authorized():
+        try:
             sent = await client.send_code_request(phone)
-            # Store phone_code_hash for later use in /verify-code
-            redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, 300)
+            redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
+
+        except PhoneNumberInvalidError:
+            raise Exception("❌ Invalid phone number")
+        except PhoneNumberBannedError:
+            raise Exception("❌ Phone number banned")
+        except FloodWaitError as e:
+            raise Exception(f"❌ Too many attempts. Wait {e.seconds} seconds")
+        except Exception as e:
+            raise Exception(f"❌ Unknown error: {str(e)}")
 
 @app.route("/api/send-code", methods=["POST"])
 def send_code():
