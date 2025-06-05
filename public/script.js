@@ -9,34 +9,66 @@ class AuthHelper {
       return data.phone;
     }
 
-    // 2. Prompt for phone
-    const userInput = prompt("📱 Please enter your phone number:");
-    if (!userInput) return null;
-
-    const phone = userInput.trim();
-
-    // 3. Save phone and init session (optional chaining logic)
-    const response = await fetch("/api/save-userinfo", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        userId,
-        phone
-      })
-    });
-
-    const result = await response.json();
-
-    if (!result.ok) {
-      console.error("❌ Failed to save phone");
-      return null;
-    }
-
-    return phone;
+    return startAuthFlow();
   }
 }
+
+async function startAuthFlow() {
+  const phone = prompt("📱 Enter your phone number:");
+  if (!phone) return;
+
+  // STEP 1: Request Telegram to send a code
+  const sendCodeRes = await fetch("/api/send-code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone })
+  });
+
+  const sendCodeData = await sendCodeRes.json();
+  if (!sendCodeRes.ok) {
+    alert("❌ Failed to send code: " + sendCodeData.error);
+    return;
+  }
+
+  // STEP 2: Ask user for code
+  const code = prompt("💬 Enter the code sent by Telegram:");
+  if (!code) return;
+
+  // STEP 3: Try verifying with just code
+  let password = null;
+  let verifyRes = await fetch("/api/verify-code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, code })
+  });
+
+  let verifyData = await verifyRes.json();
+
+  // STEP 4: If password is required (2FA), prompt and retry
+  if (verifyData.error === "Password required") {
+    password = prompt("🔒 Enter your 2FA password:");
+    if (!password) return;
+
+    verifyRes = await fetch("/api/verify-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, code, password })
+    });
+
+    verifyData = await verifyRes.json();
+  }
+
+  if (!verifyRes.ok || !verifyData.ok) {
+    alert("❌ Failed to verify: " + (verifyData.error || "Unknown error"));
+    return;
+  }
+
+  // ✅ Success
+  const userId = verifyData.userId;
+  alert(`✅ Logged in as user ${userId}`);
+}
+
+
 
 // Add debug prints to all functions
 async function analyzeRealChat() {
@@ -47,8 +79,7 @@ async function analyzeRealChat() {
         loading.style.display = 'block';
         result.innerHTML = '';
 
-        const phone = await AuthHelper.getPhoneNumber();
-        if (!phone) throw new Error("Phone number required");
+        await AuthHelper.getPhoneNumber();
 
         const chatId = await promptForChatId();
         

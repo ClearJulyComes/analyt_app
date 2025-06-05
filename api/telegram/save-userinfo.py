@@ -30,7 +30,7 @@ async def create_session(phone):
 def save_userinfo():
     try:
         data = request.get_json()
-        logger.info("[Save] Request: %s", data)
+        logger.info("[Save userinfo] Request: %s", data)
         user_id = data.get("userId")
         phone = data.get("phone")
 

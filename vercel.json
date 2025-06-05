@@ -20,8 +20,13 @@
       "methods": ["POST"]
     },
     {
-      "src": "/api/save-userinfo",
-      "dest": "/api/telegram/save-userinfo.py",
+      "src": "/api/send-code",
+      "dest": "/api/telegram/send-code.py",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/verify-code",
+      "dest": "/api/telegram/verify-code.py",
       "methods": ["POST"]
     },
     {
