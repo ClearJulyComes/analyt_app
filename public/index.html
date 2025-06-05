@@ -25,12 +25,17 @@
             <div id="result"></div>
         </div>
     </div>
+    <script src="script.js"></script>
     <script>
-      window.addEventListener("load", () => {
-        if (typeof AuthHelper === "undefined") {
-          alert("❌ AuthHelper is not loaded.");
+      document.addEventListener('DOMContentLoaded', () => {
+        // Wait for Telegram WebApp to be ready
+        if (window.Telegram && window.Telegram.WebApp) {
+          Telegram.WebApp.ready();
+          AuthHelper.init();
         } else {
-          AuthHelper.doAuth();
+          console.error("Telegram WebApp SDK not loaded");
+          // Fallback for testing outside Telegram
+          AuthHelper.init();
         }
       });
     </script>
