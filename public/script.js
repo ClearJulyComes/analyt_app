@@ -36,6 +36,7 @@ class AuthHelper {
         // 3. Check if we have a verification in progress
         const statusResponse = await fetch(`/api/check-code-status?userId=${userId}`);
         const statusData = await statusResponse.json();
+        alert("Code status: %s", statusData)
 
         if (statusData.status) {
           console.log("Code verification in progress");

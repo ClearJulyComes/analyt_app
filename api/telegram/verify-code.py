@@ -51,6 +51,7 @@ def verify_code():
 
         # Retrieve code hash
         phone_code_hash = redis.get(f"tg:code_hash:{phone}")
+        logger.info("Old code hash: %s", phone_code_hash)
 
         if not phone_code_hash:
             return jsonify({"error": "Code expired or not sent"}), 400

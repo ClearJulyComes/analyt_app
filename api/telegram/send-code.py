@@ -18,6 +18,8 @@ redis = Redis(
     url=os.environ["UPSTASH_REDIS_REST_URL"],
     token=os.environ["UPSTASH_REDIS_REST_TOKEN"]
 )
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
@@ -29,6 +31,8 @@ async def create_session(user_id, phone):
         client = TelegramClient(StringSession(), api_id, api_hash)
         await client.connect()
         sent = await client.send_code_request(phone)
+        logger.info("New code hash: %s", sent.phone_code_hash)
+
         redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
         redis.set(f"tg:phone:{user_id}", phone, ex=300)
     except PhoneNumberInvalidError:
@@ -71,8 +75,10 @@ def check_code_status():
         # Check if code is valid (implementation depends on your logic)
         code_hash = redis.get(f"tg:code_hash:{phone}")
         if not code_hash:
+            logger.info("No code")
             return jsonify({"status": false, "message": "No verification request found for this phone"})
         
+        logger.info("Verify code: %s", code_hash)
         return jsonify({
             "status": true,
             "message": "Code hash persist"
