@@ -23,7 +23,7 @@ loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
 # ✅ Async function to send the login code
-async def create_session(phone):
+async def create_session(user_id, phone):
     try:
         async with TelegramClient(StringSession(), api_id, api_hash) as client:
             sent = await client.send_code_request(phone)
@@ -37,20 +37,18 @@ async def create_session(phone):
         raise Exception(f"❌ Too many attempts. Wait {e.seconds} seconds")
     except Exception as e:
         raise Exception(f"❌ Unknown error: {str(e)}")
-    finally:
-        if client:
-            await client.disconnect()
 
 @app.route("/api/send-code", methods=["POST"])
 def send_code():
     try:
         data = request.get_json()
         phone = data.get("phone")
+        user_id = data.get("userId")
         if not phone:
             return jsonify({"error": "Missing phone"}), 400
 
         # ✅ Run async function inside Flask
-        result = loop.run_until_complete(create_session(phone))
+        result = loop.run_until_complete(create_session(user_id, phone))
 
         return jsonify(result)
     except Exception as e:
