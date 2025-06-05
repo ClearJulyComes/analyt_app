@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from telethon.sync import TelegramClient
 from telethon.sessions import StringSession
-import redis
+from upstash_redis import Redis
 import os
 import logging
 
@@ -14,8 +14,11 @@ app = Flask(__name__)
 api_id = int(os.environ.get("TELEGRAM_API_ID"))
 api_hash = os.environ.get("TELEGRAM_API_HASH")
 
-# Redis client using redis:// or rediss:// URL
-redis_client = redis.Redis.from_url(os.environ.get("UPSTASH_REDIS_REST_URL"))  # Must be rediss://...
+# Upstash Redis (HTTP mode)
+redis = Redis(
+    url=os.environ["UPSTASH_REDIS_REST_URL"],
+    token=os.environ["UPSTASH_REDIS_REST_TOKEN"]
+)
 
 @app.route('/api/save-userinfo', methods=['POST'])
 def save_userinfo():
@@ -33,11 +36,11 @@ def save_userinfo():
             string_session = client.session.save()
             logger.info("[Session] Get session: %s", string_session)
 
-            # Save to Redis
-            redis_client.setex(f"tg:session:{user_id}", 60 * 60 * 24, string_session)
-            redis_client.setex(f"tg:phone:{user_id}", 60 * 60 * 24, phone)
+            # Save to Redis (Upstash supports EX via options)
+            redis.set(f"tg:session:{user_id}", string_session, ex=60 * 60 * 24)
+            redis.set(f"tg:phone:{user_id}", phone, ex=60 * 60 * 24)
 
         return jsonify({"ok": True})
     except Exception as e:
-        logger.info("[Redis] Save error: %s", e)
+        logger.exception("[Redis] Save error:")
         return jsonify({"error": str(e)}), 500
