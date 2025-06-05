@@ -3,7 +3,7 @@ from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
 import os
-import redis
+from upstash_redis import Redis
 import logging
 import asyncio
 
