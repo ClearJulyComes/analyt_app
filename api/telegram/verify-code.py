@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from telethon.sync import TelegramClient
+from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
 import os
@@ -18,17 +18,18 @@ redis = Redis(
     url=os.environ["UPSTASH_REDIS_REST_URL"],
     token=os.environ["UPSTASH_REDIS_REST_TOKEN"]
 )
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
 async def create_session(phone, code, phone_code_hash, password):
     async with TelegramClient(StringSession(), api_id, api_hash) as client:
-        await client.connect()
         try:
             await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash.decode())
         except SessionPasswordNeededError:
             if not password:
                 return jsonify({"error": "Password required"}), 403
             await client.sign_in(password=password)
-        return {client.session.save(), client.get_me()}
+        return {client.session.save(), await client.get_me()}
         
 
 @app.route("/api/verify-code", methods=["POST"])
@@ -48,7 +49,7 @@ def verify_code():
         if not phone_code_hash:
             return jsonify({"error": "Code expired or not sent"}), 400
 
-        session_str, me = asyncio.run(create_session(phone, code, phone_code_hash, password))
+        session_str, me = loop.run_until_complete(create_session(phone, code, phone_code_hash, password))
 
         redis.set(f"tg:session:{me.id}", session_str, 60 * 60 * 24)
         redis.set(f"tg:phone:{me.id}", phone, 60 * 60 * 24)

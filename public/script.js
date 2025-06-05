@@ -1,74 +1,116 @@
 class AuthHelper {
-  static async getPhoneNumber() {
+  static async doAuth() {
     // 1. Check Redis via your backend
     const userId = Telegram.WebApp.initDataUnsafe.user?.id;
     const existing = await fetch(`/api/get-userinfo?userId=${userId}`);
     const data = await existing.json();
-
-    if (data.phone) {
+    if (data.session) {
+      AuthHelper.showApp();
       return data.phone;
     }
 
-    return startAuthFlow();
+    const res = await fetch(`/api/check-code-status?userId=${userId}`);
+    const data = await res.json();
+
+    if (data.status) {
+        showCodeInput(data.phone);
+    } else {
+        showPhoneInput();
+    }
+  }
+
+  static showApp() {
+    document.getElementById("auth-container").style.display = "none";
+    document.getElementById("app-content").style.display = "block";
   }
 }
 
-async function startAuthFlow() {
-  const phone = prompt("📱 Enter your phone number:");
-  if (!phone) return;
+function showPhoneInput() {
+  const container = document.getElementById("auth-container");
+  container.innerHTML = `
+    <label>📱 Enter your phone number:</label>
+    <input type="text" id="phone-input" />
+    <button onclick="submitPhone()">Send Code</button>
+  `;
+}
 
-  // STEP 1: Request Telegram to send a code
-  const sendCodeRes = await fetch("/api/send-code", {
+async function submitPhone() {
+  const phone = document.getElementById("phone-input").value;
+  const userId = Telegram.WebApp.initDataUnsafe.user?.id;
+
+  const res = await fetch("/api/send-code", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone })
+    body: JSON.stringify({ phone, userId })
   });
 
-  const sendCodeData = await sendCodeRes.json();
-  if (!sendCodeRes.ok) {
-    alert("❌ Failed to send code: " + sendCodeData.error);
-    return;
+  const data = await res.json();
+
+  if (res.ok) {
+    showCodeInput(phone);
+  } else {
+    alert("❌ " + data.error);
   }
+}
 
-  // STEP 2: Ask user for code
-  const code = prompt("💬 Enter the code sent by Telegram:");
-  if (!code) return;
+function showCodeInput(phone) {
+  const container = document.getElementById("auth-container");
+  container.innerHTML = `
+    <p>📨 Code sent to <strong>${phone}</strong></p>
+    <label>💬 Enter the code:</label>
+    <input type="text" id="code-input" />
+    <button onclick="submitCode('${phone}')">Verify</button>
+  `;
+}
 
-  // STEP 3: Try verifying with just code
-  let password = null;
-  let verifyRes = await fetch("/api/verify-code", {
+async function submitCode(phone) {
+  const code = document.getElementById("code-input").value;
+
+  const res = await fetch("/api/verify-code", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone, code })
   });
 
-  let verifyData = await verifyRes.json();
+  const data = await res.json();
 
-  // STEP 4: If password is required (2FA), prompt and retry
-  if (verifyData.error === "Password required") {
-    password = prompt("🔒 Enter your 2FA password:");
-    if (!password) return;
-
-    verifyRes = await fetch("/api/verify-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, code, password })
-    });
-
-    verifyData = await verifyRes.json();
+  if (res.ok && data.ok) {
+    alert(`✅ Logged in as user ${data.userId}`);
+    AuthHelper.showApp();
+  } else if (data.error === "Password required") {
+    showPasswordInput(phone, code);
+  } else {
+    alert("❌ " + data.error);
   }
-
-  if (!verifyRes.ok || !verifyData.ok) {
-    alert("❌ Failed to verify: " + (verifyData.error || "Unknown error"));
-    return;
-  }
-
-  // ✅ Success
-  const userId = verifyData.userId;
-  alert(`✅ Logged in as user ${userId}`);
 }
 
+function showPasswordInput(phone, code) {
+  const container = document.getElementById("auth-container");
+  container.innerHTML = `
+    <label>🔒 Enter your 2FA password:</label>
+    <input type="password" id="password-input" />
+    <button onclick="submitPassword('${phone}', '${code}')">Verify</button>
+  `;
+}
 
+async function submitPassword(phone, code) {
+  const password = document.getElementById("password-input").value;
+
+  const res = await fetch("/api/verify-code", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, code, password })
+  });
+
+  const data = await res.json();
+
+  if (res.ok && data.ok) {
+    alert(`✅ Logged in as user ${data.userId}`);
+    AuthHelper.showApp();
+  } else {
+    alert("❌ " + data.error);
+  }
+}
 
 // Add debug prints to all functions
 async function analyzeRealChat() {
@@ -78,8 +120,6 @@ async function analyzeRealChat() {
     try {
         loading.style.display = 'block';
         result.innerHTML = '';
-
-        await AuthHelper.getPhoneNumber();
 
         const chatId = await promptForChatId();
         

@@ -25,6 +25,11 @@
       "methods": ["POST"]
     },
     {
+      "src": "/api/check-code-status",
+      "dest": "/api/telegram/send-code.py",
+      "methods": ["GET"]
+    },
+    {
       "src": "/api/verify-code",
       "dest": "/api/telegram/verify-code.py",
       "methods": ["POST"]

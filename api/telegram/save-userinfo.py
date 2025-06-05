@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from telethon.sync import TelegramClient
+from telethon import TelegramClient
 from telethon.sessions import StringSession
 from upstash_redis import Redis
 import os
@@ -8,6 +8,9 @@ import asyncio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
 app = Flask(__name__)
 
@@ -38,7 +41,7 @@ def save_userinfo():
             return jsonify({"error": "Missing userId or phone"}), 400
 
         # Run async Telethon session creation
-        string_session = asyncio.run(create_session(phone))
+        string_session = loop.run_until_complete(create_session(phone))
         logger.info("[Session] Created: %s", string_session)
 
         # Save to Redis

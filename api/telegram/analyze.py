@@ -13,72 +13,67 @@ import requests
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 WEBAPP_URL = os.getenv('WEBAPP_URL')
+TELEGRAM_API_ID = os.getenv('TELEGRAM_API_ID')
+TELEGRAM_API_HASH = os.getenv('TELEGRAM_API_HASH')
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
-async def analyze_messages(phone, chat_id, limit=100):
+async def analyze_messages(user_id, chat_id, limit=100):
 
-    response = requests.get("{WEBAPP_URL}/api/get_userinfo", params={"userId": user_id})
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{WEBAPP_URL}/api/get_userinfo", params={"userId": user_id})
 
-    if response.status_code == 200:
-        data = response.json()
-        session = data.get("session")
-        phone = data.get("phone")
-    else:
-        print("Error:", response.json())
+        if response.status_code == 200:
+            data = response.json()
+            session = data.get("session")
+            phone = data.get("phone")
+        else:
+            print("Error:", response.json())
 
-    client = TelegramClient(
-        session=StringSession(session),
-        api_id=int(os.getenv('TELEGRAM_API_ID')),
-        api_hash=os.getenv('TELEGRAM_API_HASH')
-    )
-    
-    await client.start(phone)
-    
-    try:
-        entity = InputPeerUser(chat_id, 0)
-        messages = []
-        
-        async for msg in client.iter_messages(entity, limit=limit):
-            messages.append({
-                'sender_id': msg.sender_id,
-                'text': msg.text or "",
-                'date': msg.date
-            })
+        async with TelegramClient(StringSession(session), int(TELEGRAM_API_ID), TELEGRAM_API_HASH) as client:
+            await client.start(phone)
+            try:
+                entity = await client.get_entity(chat_id)
+                messages = []
+                
+                async for msg in client.iter_messages(entity, limit=limit):
+                    messages.append({
+                        'sender_id': msg.sender_id,
+                        'text': msg.text or "",
+                        'date': msg.date
+                    })
 
-        messages.reverse()  # oldest to newest for chronological logic
+                messages.reverse()  # oldest to newest for chronological logic
 
-        # Analysis containers
-        message_counts = defaultdict(int)
-        sentiment_counts = defaultdict(lambda: defaultdict(int))
-        starter_counts = defaultdict(int)
+                # Analysis containers
+                message_counts = defaultdict(int)
+                sentiment_counts = defaultdict(lambda: defaultdict(int))
+                starter_counts = defaultdict(int)
 
-        last_timestamp = None
-        idle_threshold = timedelta(minutes=60)
-        sentiment_summary, explanation = await get_sentiments_summary(messages)
+                last_timestamp = None
+                idle_threshold = timedelta(minutes=60)
+                sentiment_summary, explanation = await get_sentiments_summary(messages)
 
-        for i, msg in enumerate(messages):
-            sender = msg['sender_id']
-            text = msg['text']
-            timestamp = msg['date']
+                for i, msg in enumerate(messages):
+                    sender = msg['sender_id']
+                    text = msg['text']
+                    timestamp = msg['date']
 
-            # Count messages
-            message_counts[sender] += 1
+                    # Count messages
+                    message_counts[sender] += 1
 
-            # Conversation starter logic
-            if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
-                starter_counts[sender] += 1
-            last_timestamp = timestamp
+                    # Conversation starter logic
+                    if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
+                        starter_counts[sender] += 1
+                    last_timestamp = timestamp
 
-        return {
-            'message_count': format_stats(message_counts),
-            'starter_stats': format_stats(starter_counts),
-            'sentiment_summary': sentiment_summary,
-            'sentiment_explanation': explanation,
-            'total_messages': len(messages)
-        }
-
-    finally:
-        await client.disconnect()
-
+                return {
+                    'message_count': format_stats(message_counts),
+                    'starter_stats': format_stats(starter_counts),
+                    'sentiment_summary': sentiment_summary,
+                    'sentiment_explanation': explanation,
+                    'total_messages': len(messages)
+                }
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -86,10 +81,9 @@ class handler(BaseHTTPRequestHandler):
         data = json.loads(self.rfile.read(content_length))
         
         try:
-            loop = asyncio.new_event_loop()
             result = loop.run_until_complete(
                 analyze_messages(
-                    phone=data['phone'],
+                    user_id=data['user_id'],
                     chat_id=data['chat_id'],
                     limit=data.get('limit', 100)
                 )

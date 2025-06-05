@@ -24,12 +24,11 @@ asyncio.set_event_loop(loop)
 
 # ✅ Async function to send the login code
 async def create_session(phone):
-    client = None
     try:
-        client = TelegramClient(StringSession(), api_id, api_hash)
-        await client.connect()
-        sent = await client.send_code_request(phone)
-        redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
+        async with TelegramClient(StringSession(), api_id, api_hash) as client:
+            sent = await client.send_code_request(phone)
+            redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
+            redis.set(f"tg:phone:{user_id}", phone, ex=300)
     except PhoneNumberInvalidError:
         raise Exception("❌ Invalid phone number")
     except PhoneNumberBannedError:
@@ -56,3 +55,28 @@ def send_code():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/check-code-status", methods=["GET"])
+def check_code_status():
+    try:
+        # Get parameters from query string
+        phone = request.args.get("phone")
+        
+        if not phone:
+            return jsonify({"error": "Missing phone parameter"}), 400
+        
+        # Check if code is valid (implementation depends on your logic)
+        code_hash = redis.get(f"tg:code_hash:{phone}")
+        if not code_hash:
+            return jsonify({"status": false, "message": "No verification request found for this phone"})
+        
+        return jsonify({
+            "status": true,
+            "message": "Code hash persist"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# This is important for Vercel to recognize the Flask app
+if __name__ == '__main__':
+    app.run()
