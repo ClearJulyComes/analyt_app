@@ -1,5 +1,6 @@
 class AuthHelper {
   static async doAuth() {
+    alert("Start auth");
     // 1. Check Redis via your backend
     const userId = Telegram.WebApp.initDataUnsafe.user?.id;
     const existing = await fetch(`/api/get-userinfo?userId=${userId}`);
