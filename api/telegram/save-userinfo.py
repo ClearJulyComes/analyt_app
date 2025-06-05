@@ -3,6 +3,10 @@ from telethon.sync import TelegramClient
 from telethon.sessions import StringSession
 import redis
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -17,6 +21,7 @@ redis_client = redis.Redis.from_url(os.environ.get("UPSTASH_REDIS_REST_URL"))  #
 def save_userinfo():
     try:
         data = request.get_json()
+        logger.info("[Save] Request: %s", data)
         user_id = data.get("userId")
         phone = data.get("phone")
 

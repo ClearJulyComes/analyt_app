@@ -22,8 +22,7 @@ class AuthHelper {
       },
       body: JSON.stringify({
         userId,
-        dataType: "phone",
-        data: phone
+        phone
       })
     });
 
