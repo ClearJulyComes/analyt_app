@@ -22,7 +22,6 @@ redis = Redis(
 # ✅ Async function to send the login code
 async def create_session(phone):
     async with TelegramClient(StringSession(), api_id, api_hash) as client:
-        await client.connect()
 
         try:
             sent = await client.send_code_request(phone)
