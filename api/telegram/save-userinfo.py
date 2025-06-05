@@ -25,9 +25,15 @@ redis = Redis(
 )
 
 async def create_session(phone):
-    async with TelegramClient(StringSession(), api_id, api_hash) as client:
+    client = None
+    try:
+        client = TelegramClient(StringSession(), api_id, api_hash)
+        await client.connect()
         await client.start(phone=phone)
         return client.session.save()
+    finally:
+        if client and not client.is_connected():
+            await client.disconnect()
 
 @app.route('/api/save-userinfo', methods=['POST'])
 def save_userinfo():

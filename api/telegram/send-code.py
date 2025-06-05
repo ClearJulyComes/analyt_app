@@ -24,11 +24,13 @@ asyncio.set_event_loop(loop)
 
 # ✅ Async function to send the login code
 async def create_session(user_id, phone):
+    client = None
     try:
-        async with TelegramClient(StringSession(), api_id, api_hash) as client:
-            sent = await client.send_code_request(phone)
-            redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
-            redis.set(f"tg:phone:{user_id}", phone, ex=300)
+        client = TelegramClient(StringSession(), api_id, api_hash)
+        await client.connect()
+        sent = await client.send_code_request(phone)
+        redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
+        redis.set(f"tg:phone:{user_id}", phone, ex=300)
     except PhoneNumberInvalidError:
         raise Exception("❌ Invalid phone number")
     except PhoneNumberBannedError:
@@ -37,6 +39,9 @@ async def create_session(user_id, phone):
         raise Exception(f"❌ Too many attempts. Wait {e.seconds} seconds")
     except Exception as e:
         raise Exception(f"❌ Unknown error: {str(e)}")
+    finally:
+        if client and not client.is_connected():
+            await client.disconnect()
 
 @app.route("/api/send-code", methods=["POST"])
 def send_code():

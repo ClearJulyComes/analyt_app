@@ -22,14 +22,20 @@ loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
 async def create_session(phone, code, phone_code_hash, password):
-    async with TelegramClient(StringSession(), api_id, api_hash) as client:
-        try:
-            await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash.decode())
-        except SessionPasswordNeededError:
-            if not password:
-                return jsonify({"error": "Password required"}), 403
-            await client.sign_in(password=password)
+    client = None
+    try:
+        client = TelegramClient(StringSession(), api_id, api_hash)
+        await client.connect()
+        await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash.decode())
+        
         return {client.session.save(), await client.get_me()}
+    except SessionPasswordNeededError:
+        if not password:
+            return jsonify({"error": "Password required"}), 403
+        await client.sign_in(password=password)
+    finally:
+        if client and not client.is_connected():
+            await client.disconnect()
         
 
 @app.route("/api/verify-code", methods=["POST"])
