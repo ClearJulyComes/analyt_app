@@ -25,10 +25,13 @@
             <div id="result"></div>
         </div>
     </div>
-    <script src="script.js"></script>
     <script>
       window.addEventListener("load", () => {
-        AuthHelper.doAuth();
+        if (typeof AuthHelper === "undefined") {
+          alert("❌ AuthHelper is not loaded.");
+        } else {
+          AuthHelper.doAuth();
+        }
       });
     </script>
 </body>
