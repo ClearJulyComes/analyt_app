@@ -152,7 +152,7 @@ async function fetchAnalysis(chatId) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            user_id: Telegram.WebApp.initDataUnsafe.user?.id;,
+            user_id: Telegram.WebApp.initDataUnsafe.user?.id,
             chat_id: parseInt(chatId),
             limit: 100
         })
