@@ -146,12 +146,12 @@ async function promptForChatId() {
     return prompt("Enter numeric chat ID (User ID or Group ID with -):");
 }
 
-async function fetchAnalysis(phone, chatId) {
+async function fetchAnalysis(chatId) {
     const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            phone: phone,
+            user_id: Telegram.WebApp.initDataUnsafe.user?.id;,
             chat_id: parseInt(chatId),
             limit: 100
         })
