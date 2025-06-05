@@ -4,6 +4,7 @@ from telethon.sessions import StringSession
 from upstash_redis import Redis
 import os
 import logging
+import asyncio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
