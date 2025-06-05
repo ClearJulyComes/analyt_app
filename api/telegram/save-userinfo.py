@@ -31,6 +31,7 @@ def save_userinfo():
         with TelegramClient(StringSession(), api_id, api_hash) as client:
             client.start(phone=phone)
             string_session = client.session.save()
+            logger.info("[Session] Get session: %s", string_session)
 
             # Save to Redis
             redis_client.setex(f"tg:session:{user_id}", 60 * 60 * 24, string_session)
@@ -38,4 +39,5 @@ def save_userinfo():
 
         return jsonify({"ok": True})
     except Exception as e:
+        logger.info("[Redis] Save error: %s", e)
         return jsonify({"error": str(e)}), 500
