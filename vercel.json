@@ -20,6 +20,16 @@
       "methods": ["POST"]
     },
     {
+      "src": "/api/save-userinfo",
+      "dest": "/api/telegram/save-userinfo.py",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/get-userinfo",
+      "dest": "/api/telegram/get-userinfo.py",
+      "methods": ["GET"]
+    },
+    {
       "src": "/(.*)",
       "dest": "/public/$1"
     }

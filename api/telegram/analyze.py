@@ -11,10 +11,21 @@ import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+WEBAPP_URL = os.getenv('WEBAPP_URL')
 
 async def analyze_messages(phone, chat_id, limit=100):
+
+    response = requests.get("{WEBAPP_URL}/api/get_userinfo", params={"userId": user_id})
+
+    if response.status_code == 200:
+        data = response.json()
+        session = data.get("session")
+        phone = data.get("phone")
+    else:
+        print("Error:", response.json())
+
     client = TelegramClient(
-        session=StringSession(os.getenv("TELEGRAM_SESSION_STRING")),
+        session=StringSession(session),
         api_id=int(os.getenv('TELEGRAM_API_ID')),
         api_hash=os.getenv('TELEGRAM_API_HASH')
     )

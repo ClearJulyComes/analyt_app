@@ -1,35 +1,45 @@
 class AuthHelper {
-    static async getPhoneNumber() {
-        return new Promise((resolve) => {
-            const userInput = prompt("📱 Please enter your phone number:");
-            if (userInput) {
-                // Optionally validate it
-                resolve(userInput.trim());
-            } else {
-                resolve(null);
-            }
-        });
-    }
-}
+  static async getPhoneNumber(userId) {
+    // 1. Check Redis via your backend
+    const existing = await fetch(`/api/get-userinfo?userId=${userId}`);
+    const data = await existing.json();
 
-async function validateInitData() {
-    // const response = await fetch('/api/validate', {
-    //     method: 'POST',
-    //     headers: {'Content-Type': 'text/plain'},
-    //     body: Telegram.WebApp.initData
-    // });
-    
-    // const { valid, user } = await response.json();
-    // if (valid) {
-    analyzeRealChat();
-    // } else {
-    //     Telegram.WebApp.showAlert("Authentication failed");
-    // }
+    if (data.phone) {
+      return data.phone;
+    }
+
+    // 2. Prompt for phone
+    const userInput = prompt("📱 Please enter your phone number:");
+    if (!userInput) return null;
+
+    const phone = userInput.trim();
+
+    // 3. Save phone and init session (optional chaining logic)
+    const response = await fetch("/api/save-userinfo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        userId,
+        dataType: "phone",
+        data: phone
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.ok) {
+      console.error("❌ Failed to save phone");
+      return null;
+    }
+
+    return phone;
+  }
 }
 
 // Add debug prints to all functions
 async function analyzeRealChat() {
-    console.log("[DEBUG] analyzeRealChat started");
     const loading = document.getElementById('loading');
     const result = document.getElementById('result');
     
@@ -37,16 +47,12 @@ async function analyzeRealChat() {
         loading.style.display = 'block';
         result.innerHTML = '';
 
-        console.log("[DEBUG] Getting phone number");
         const phone = await AuthHelper.getPhoneNumber();
         if (!phone) throw new Error("Phone number required");
 
-        console.log("[DEBUG] Requesting chat ID");
         const chatId = await promptForChatId();
         
-        console.log("[DEBUG] Calling API");
-        const analysis = await fetchAnalysis(phone, chatId);
-        console.log("[DEBUG] Analysis result:", analysis);
+        const analysis = await fetchAnalysis(chatId);
         
         displayResults(analysis);
         
@@ -128,5 +134,5 @@ function displayResults(data) {
 // Update event listener with debug
 document.getElementById('analyze-btn').addEventListener('click', () => {
     console.log("[DEBUG] Analyze button clicked");
-    validateInitData().catch(console.error);
+    analyzeRealChat().catch(console.error);
 });
