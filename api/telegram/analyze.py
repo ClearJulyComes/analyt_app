@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import httpx
 import logging
 import re
+import requests
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

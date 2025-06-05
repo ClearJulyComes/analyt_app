@@ -5,6 +5,7 @@ from telethon.errors import SessionPasswordNeededError
 import os
 import redis
 import logging
+import asyncio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,6 +18,18 @@ redis = Redis(
     url=os.environ["UPSTASH_REDIS_REST_URL"],
     token=os.environ["UPSTASH_REDIS_REST_TOKEN"]
 )
+
+async def create_session(phone, code, phone_code_hash, password):
+    async with TelegramClient(StringSession(), api_id, api_hash) as client:
+        await client.connect()
+        try:
+            await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash.decode())
+        except SessionPasswordNeededError:
+            if not password:
+                return jsonify({"error": "Password required"}), 403
+            await client.sign_in(password=password)
+        return {client.session.save(), client.get_me()}
+        
 
 @app.route("/api/verify-code", methods=["POST"])
 def verify_code():
@@ -35,20 +48,7 @@ def verify_code():
         if not phone_code_hash:
             return jsonify({"error": "Code expired or not sent"}), 400
 
-        # Start Telegram client
-        client = TelegramClient(StringSession(), api_id, api_hash)
-        client.connect()
-
-        try:
-            client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash.decode())
-        except SessionPasswordNeededError:
-            if not password:
-                return jsonify({"error": "Password required"}), 403
-            client.sign_in(password=password)
-
-        # Save session string
-        session_str = client.session.save()
-        me = client.get_me()
+        session_str, me = asyncio.run(create_session(phone, code, phone_code_hash, password))
 
         redis.set(f"tg:session:{me.id}", session_str, 60 * 60 * 24)
         redis.set(f"tg:phone:{me.id}", phone, 60 * 60 * 24)
