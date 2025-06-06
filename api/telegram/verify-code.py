@@ -34,7 +34,7 @@ async def create_session(phone, code, phone_code_hash, password):
         await client.connect()
         await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash)
 
-        return {client.session.save(), await client.get_me()}
+        return client.session.save(), await client.get_me()
     except SessionPasswordNeededError:
         if not password:
             return jsonify({"error": "Password required"}), 403
@@ -66,8 +66,8 @@ def verify_code():
 
         encoded = base64.urlsafe_b64encode(session_str.encode()).decode()
 
-        redis.set(f"tg:session:{me.id}", encoded, ex=60 * 60 * 24)
-        redis.set(f"tg:phone:{me.id}", phone, ex=60 * 60 * 24)
+        asyncio.run(redis.set(f"tg:session:{me.id}", encoded, ex=60 * 60 * 24))
+        asyncio.run(redis.set(f"tg:phone:{me.id}", phone, ex=60 * 60 * 24))
 
         return jsonify({"ok": True, "userId": me.id})
 
