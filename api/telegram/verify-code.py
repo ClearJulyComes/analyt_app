@@ -37,7 +37,7 @@ async def create_session(phone, code, phone_code_hash, password):
         return client.session.save(), await client.get_me()
     except SessionPasswordNeededError:
         if not password:
-            return jsonify({"error": "Password required"}), 403
+            raise Exception("Password required")
         await client.sign_in(password=password)
     finally:
         if client and not client.is_connected():
