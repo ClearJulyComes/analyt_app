@@ -44,7 +44,10 @@ async def analyze_messages(user_id, chat_id, limit=100):
         try:
             client = TelegramClient(StringSession(session), int(TELEGRAM_API_ID), TELEGRAM_API_HASH)
             await client.connect()
-            await client.start(phone)
+
+            if not await client.is_user_authorized():
+                raise Exception("Session expired - re-authentication required")
+
             entity = await client.get_entity(chat_id)
             messages = []
             
