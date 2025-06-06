@@ -10,6 +10,7 @@ import os
 from upstash_redis.asyncio import Redis
 import asyncio
 import logging
+import base64
 
 app = Flask(__name__)
 
@@ -35,11 +36,14 @@ async def create_session(user_id, phone):
         session_str = client.session.save()
 
         logger.info("Session RAW: %s", session_str)
+        session_b64 = base64.b64encode(session_str.encode()).decode()
 
-        await redis.set(f"tg:session_temp:{phone}", session_str, 300)  # 5 minutes
+        await redis.set(f"tg:session_temp:{phone}", session_b64, 300)  # 5 minutes
         stored = await redis.get(f"tg:session_temp:{phone}")
-        if isinstance(stored, bytes):
-            stored = stored.decode("utf-8")
+        # if isinstance(stored, bytes):
+        #     stored = stored.decode("utf-8")
+        if stored:
+            stored = base64.b64decode(stored).decode()
 
         logger.info("Saved session: %s", session_str)
         logger.info("Redis readback: %s", stored)
