@@ -32,7 +32,8 @@ async def create_session(user_id, phone):
         client = TelegramClient(StringSession(), api_id, api_hash)
         await client.connect()
         sent = await client.send_code_request(phone)
-        logger.info("New code hash: %s", sent.phone_code_hash)
+        session_str = client.session.save()
+        await redis.set(f"tg:session:{phone}", session_str, 300)  # 5 minutes
 
         redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
         redis.set(f"tg:phone:{user_id}", phone, ex=300)

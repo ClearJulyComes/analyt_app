@@ -24,7 +24,9 @@ asyncio.set_event_loop(loop)
 async def create_session(phone, code, phone_code_hash, password):
     client = None
     try:
-        client = TelegramClient(StringSession(), api_id, api_hash)
+        session_str = redis.get(f"tg:session:{phone}")
+
+        client = TelegramClient(StringSession(session_str), api_id, api_hash)
         await client.connect()
         await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash)
 
