@@ -34,6 +34,8 @@ async def create_session(user_id, phone):
         sent = await client.send_code_request(phone)
         session_str = client.session.save()
 
+        logger.info("Session RAW: %s", session_str)
+
         redis.set(f"tg:session:{phone}", session_str, 300)  # 5 minutes
         redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
         redis.set(f"tg:phone:{user_id}", phone, ex=300)
