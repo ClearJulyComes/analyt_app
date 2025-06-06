@@ -19,59 +19,69 @@ asyncio.set_event_loop(loop)
 
 async def analyze_messages(user_id, chat_id, limit=100):
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
+    async with httpx.AsyncClient() as http_client:
+        response = await http_client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
 
-        if response.status_code == 200:
-            data = response.json()
-            session = data.get("session")
-            phone = data.get("phone")
-        else:
-            print("Error:", response.json())
+        if response.status_code != 200:
+            logger.error("Failed to fetch user info: %s", response.text)
+            raise Exception(f"Failed to fetch user info: {response.status_code} - {response.text}")
 
-        async with TelegramClient(StringSession(session), int(TELEGRAM_API_ID), TELEGRAM_API_HASH) as client:
-            await client.start(phone)
-            entity = await client.get_entity(chat_id)
-            messages = []
-            
-            async for msg in client.iter_messages(entity, limit=limit):
-                messages.append({
-                    'sender_id': msg.sender_id,
-                    'text': msg.text or "",
-                    'date': msg.date
-                })
+        data = response.json()
+        session = data.get("session")
+        phone = data.get("phone")
 
-            messages.reverse()  # oldest to newest for chronological logic
+        if not session or not phone:
+            raise ValueError("Missing session or phone in response")
 
-            # Analysis containers
-            message_counts = defaultdict(int)
-            sentiment_counts = defaultdict(lambda: defaultdict(int))
-            starter_counts = defaultdict(int)
+    client = None
+    try:
+        client = TelegramClient(StringSession(session), int(TELEGRAM_API_ID), TELEGRAM_API_HASH)
+        await client.connect()
+        await client.start(phone)
+        entity = await client.get_entity(chat_id)
+        messages = []
+        
+        async for msg in client.iter_messages(entity, limit=limit):
+            messages.append({
+                'sender_id': msg.sender_id,
+                'text': msg.text or "",
+                'date': msg.date
+            })
 
-            last_timestamp = None
-            idle_threshold = timedelta(minutes=60)
-            sentiment_summary, explanation = await get_sentiments_summary(messages)
+        messages.reverse()  # oldest to newest for chronological logic
 
-            for i, msg in enumerate(messages):
-                sender = msg['sender_id']
-                text = msg['text']
-                timestamp = msg['date']
+        # Analysis containers
+        message_counts = defaultdict(int)
+        sentiment_counts = defaultdict(lambda: defaultdict(int))
+        starter_counts = defaultdict(int)
 
-                # Count messages
-                message_counts[sender] += 1
+        last_timestamp = None
+        idle_threshold = timedelta(minutes=60)
+        sentiment_summary, explanation = await get_sentiments_summary(messages)
 
-                # Conversation starter logic
-                if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
-                    starter_counts[sender] += 1
-                last_timestamp = timestamp
+        for i, msg in enumerate(messages):
+            sender = msg['sender_id']
+            text = msg['text']
+            timestamp = msg['date']
 
-            return {
-                'message_count': format_stats(message_counts),
-                'starter_stats': format_stats(starter_counts),
-                'sentiment_summary': sentiment_summary,
-                'sentiment_explanation': explanation,
-                'total_messages': len(messages)
-            }
+            # Count messages
+            message_counts[sender] += 1
+
+            # Conversation starter logic
+            if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
+                starter_counts[sender] += 1
+            last_timestamp = timestamp
+
+        return {
+            'message_count': format_stats(message_counts),
+            'starter_stats': format_stats(starter_counts),
+            'sentiment_summary': sentiment_summary,
+            'sentiment_explanation': explanation,
+            'total_messages': len(messages)
+        }
+    finally:
+        if client and not client.is_connected():
+            await client.disconnect()
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -97,6 +107,8 @@ class handler(BaseHTTPRequestHandler):
 
 def format_stats(stats):
     total = sum(stats.values())
+    if total == 0:
+        return {k: f"{v} (0%)" for k, v in stats.items()}
     return {k: f"{v} ({v/total:.0%})" for k, v in stats.items()}
 
 async def get_sentiments_summary(messages):
