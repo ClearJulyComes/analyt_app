@@ -33,14 +33,14 @@ async def create_session(user_id, phone):
         session_str = client.session.save()
 
         logger.info("Session RAW: %s", session_str)
-        session_b64 = base64.b64encode(session_str.encode()).decode()
+        encoded = base64.urlsafe_b64encode(session_str.encode()).decode()
 
-        await redis.set(f"tg:session_temp:{phone}", session_b64, 300)  # 5 minutes
+        await redis.set(f"tg:session_temp:{phone}", encoded, 300)  # 5 minutes
         stored = asyncio.run(redis.get(f"tg:session_temp:{phone}"))
         # if isinstance(stored, bytes):
         #     stored = stored.decode("utf-8")
         if stored:
-            stored = base64.b64decode(stored).decode()
+            stored = base64.urlsafe_b64decode(stored).decode()
 
         logger.info("Saved session: %s", session_str)
         logger.info("Redis readback: %s", stored)
