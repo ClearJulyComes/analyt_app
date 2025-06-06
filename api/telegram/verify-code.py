@@ -34,7 +34,7 @@ async def create_session(phone, code, phone_code_hash, password):
         await client.connect()
         await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash)
 
-        return {await client.session.save(), await client.get_me()}
+        return {client.session.save(), await client.get_me()}
     except SessionPasswordNeededError:
         if not password:
             return jsonify({"error": "Password required"}), 403
@@ -56,7 +56,7 @@ def verify_code():
             return jsonify({"error": "Missing phone or code"}), 400
 
         # Retrieve code hash
-        phone_code_hash = redis.get(f"tg:code_hash:{phone}")
+        phone_code_hash = asyncio.run(redis.get(f"tg:code_hash:{phone}"))
         logger.info("Old code hash: %s", phone_code_hash)
 
         if not phone_code_hash:
