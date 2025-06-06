@@ -24,14 +24,13 @@ asyncio.set_event_loop(loop)
 async def create_session(phone, code, phone_code_hash, password):
     client = None
     try:
-        session_str = redis.get(f"tg:session:{phone}")
+        session_str = redis.get(f"tg:session_temp:{phone}")
 
         logger.info("Session redis: %s", session_str)
-        if session_str:
-            session_str = session_str.decode("utf-8")
+        # Ensure string format (decode if bytes)
+        if isinstance(session_str, bytes):
+            session_str = session_str.decode('utf-8')
             logger.info("Session decode: %s", session_str)
-        if phone_code_hash:
-            phone_code_hash = phone_code_hash.decode("utf-8")
 
         client = TelegramClient(StringSession(session_str), api_id, api_hash)
         await client.connect()
