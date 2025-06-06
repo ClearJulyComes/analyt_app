@@ -35,8 +35,8 @@ async def create_session(user_id, phone):
         logger.info("Session RAW: %s", session_str)
         encoded = base64.urlsafe_b64encode(session_str.encode()).decode()
 
-        await redis.set(f"tg:session_temp:{phone}", encoded, 300)  # 5 minutes
-        stored = asyncio.run(redis.get(f"tg:session_temp:{phone}"))
+        await redis.set(f"tg:session_temp:{phone}", encoded, ex=300)  # 5 minutes
+        stored = await redis.get(f"tg:session_temp:{phone}")
         # if isinstance(stored, bytes):
         #     stored = stored.decode("utf-8")
         if stored:
@@ -86,7 +86,7 @@ def check_code_status():
             return jsonify({"error": "Missing phone parameter"}), 400
         
         # Check if code is valid (implementation depends on your logic)
-        code_hash = asyncio.run(redis.get(f"tg:code_hash:{phone}"))
+        code_hash = await redis.get(f"tg:code_hash:{phone}")
         if not code_hash:
             logger.info("No code")
             return jsonify({"status": False, "message": "No verification request found for this phone"})

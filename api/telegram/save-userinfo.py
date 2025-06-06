@@ -47,7 +47,7 @@ def save_userinfo():
             return jsonify({"error": "Missing userId or phone"}), 400
 
         # Run async Telethon session creation
-        string_session = loop.run_until_complete(create_session(phone))
+        string_session = asyncio.run(create_session(phone))
         logger.info("[Session] Created: %s", string_session)
 
         # Save to Redis
