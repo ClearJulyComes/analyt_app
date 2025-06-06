@@ -9,44 +9,39 @@ class AuthHelper {
     
     try {
       // 1. Check if we're running in Telegram WebApp
-      if (window.Telegram && window.Telegram.WebApp) {
-        Telegram.WebApp.expand(); // Expand the web app to full height
-        
-        const initData = Telegram.WebApp.initData || Telegram.WebApp.initDataUnsafe;
-        const userId = initData.user?.id;
-        
-        if (!userId) {
-          console.warn("No user ID found in initData");
-          this.showPhoneInput();
-          return;
-        }
+      Telegram.WebApp.expand(); // Expand the web app to full height
+      
+      const initData = Telegram.WebApp.initData || Telegram.WebApp.initDataUnsafe;
+      const userId = initData.user?.id;
+      
+      if (!userId) {
+        alert("No user ID found in initData");
+        this.showPhoneInput();
+        return;
+      }
 
-        console.log("Checking user session for ID:", userId);
-        
-        // 2. Check Redis via your backend
-        const response = await fetch(`/api/get-userinfo?userId=${userId}`);
-        const data = await response.json();
-        
-        if (data.session) {
-          console.log("Existing session found");
-          this.showApp();
-          return data.phone;
-        }
+      console.log("Checking user session for ID:", userId);
+      
+      // 2. Check Redis via your backend
+      const response = await fetch(`/api/get-userinfo?userId=${userId}`);
+      const data = await response.json();
+      
+      if (data.session) {
+        alert("Existing session found");
+        this.showApp();
+        return;
+      }
 
-        // 3. Check if we have a verification in progress
-        const statusResponse = await fetch(`/api/check-code-status?userId=${userId}`);
-        const statusData = await statusResponse.json();
-        alert("Code status: %s", statusData)
+      // 3. Check if we have a verification in progress
+      const statusResponse = await fetch(`/api/check-code-status?userId=${userId}`);
+      const statusData = await statusResponse.json();
+      alert("Code status:", statusData);
 
-        if (statusData.status) {
-          console.log("Code verification in progress");
-          this.showCodeInput(statusData.phone);
-        } else {
-          console.log("No active session, showing phone input");
-          this.showPhoneInput();
-        }
+      if (statusData.status) {
+        console.log("Code verification in progress");
+        this.showCodeInput(statusData.phone);
       } else {
-        console.warn("Not running in Telegram WebApp - showing phone input");
+        console.log("No active session, showing phone input");
         this.showPhoneInput();
       }
     } catch (error) {
