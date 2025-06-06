@@ -28,6 +28,8 @@ def get_session():
         if session:
             session = base64.urlsafe_b64decode(session).decode()
 
+        logger.info("GET userinfo: %s", session)
+
         return jsonify({
             "session": session,
             "phone": phone

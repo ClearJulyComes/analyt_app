@@ -31,48 +31,47 @@ async def analyze_messages(user_id, chat_id, limit=100):
 
         async with TelegramClient(StringSession(session), int(TELEGRAM_API_ID), TELEGRAM_API_HASH) as client:
             await client.start(phone)
-            try:
-                entity = await client.get_entity(chat_id)
-                messages = []
-                
-                async for msg in client.iter_messages(entity, limit=limit):
-                    messages.append({
-                        'sender_id': msg.sender_id,
-                        'text': msg.text or "",
-                        'date': msg.date
-                    })
+            entity = await client.get_entity(chat_id)
+            messages = []
+            
+            async for msg in client.iter_messages(entity, limit=limit):
+                messages.append({
+                    'sender_id': msg.sender_id,
+                    'text': msg.text or "",
+                    'date': msg.date
+                })
 
-                messages.reverse()  # oldest to newest for chronological logic
+            messages.reverse()  # oldest to newest for chronological logic
 
-                # Analysis containers
-                message_counts = defaultdict(int)
-                sentiment_counts = defaultdict(lambda: defaultdict(int))
-                starter_counts = defaultdict(int)
+            # Analysis containers
+            message_counts = defaultdict(int)
+            sentiment_counts = defaultdict(lambda: defaultdict(int))
+            starter_counts = defaultdict(int)
 
-                last_timestamp = None
-                idle_threshold = timedelta(minutes=60)
-                sentiment_summary, explanation = await get_sentiments_summary(messages)
+            last_timestamp = None
+            idle_threshold = timedelta(minutes=60)
+            sentiment_summary, explanation = await get_sentiments_summary(messages)
 
-                for i, msg in enumerate(messages):
-                    sender = msg['sender_id']
-                    text = msg['text']
-                    timestamp = msg['date']
+            for i, msg in enumerate(messages):
+                sender = msg['sender_id']
+                text = msg['text']
+                timestamp = msg['date']
 
-                    # Count messages
-                    message_counts[sender] += 1
+                # Count messages
+                message_counts[sender] += 1
 
-                    # Conversation starter logic
-                    if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
-                        starter_counts[sender] += 1
-                    last_timestamp = timestamp
+                # Conversation starter logic
+                if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
+                    starter_counts[sender] += 1
+                last_timestamp = timestamp
 
-                return {
-                    'message_count': format_stats(message_counts),
-                    'starter_stats': format_stats(starter_counts),
-                    'sentiment_summary': sentiment_summary,
-                    'sentiment_explanation': explanation,
-                    'total_messages': len(messages)
-                }
+            return {
+                'message_count': format_stats(message_counts),
+                'starter_stats': format_stats(starter_counts),
+                'sentiment_summary': sentiment_summary,
+                'sentiment_explanation': explanation,
+                'total_messages': len(messages)
+            }
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
