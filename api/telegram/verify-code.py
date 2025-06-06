@@ -56,7 +56,7 @@ def verify_code():
             return jsonify({"error": "Missing phone or code"}), 400
 
         # Retrieve code hash
-        phone_code_hash = await redis.get(f"tg:code_hash:{phone}")
+        phone_code_hash = redis.get(f"tg:code_hash:{phone}")
         logger.info("Old code hash: %s", phone_code_hash)
 
         if not phone_code_hash:
