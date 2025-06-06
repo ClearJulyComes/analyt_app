@@ -24,7 +24,7 @@ asyncio.set_event_loop(loop)
 async def create_session(phone, code, phone_code_hash, password):
     client = None
     try:
-        session_str = redis.get(f"tg:session_temp:{phone}")
+        session_str = await redis.get(f"tg:session_temp:{phone}")
 
         logger.info("Session redis: %s", session_str)
         # Ensure string format (decode if bytes)
@@ -58,7 +58,7 @@ def verify_code():
             return jsonify({"error": "Missing phone or code"}), 400
 
         # Retrieve code hash
-        phone_code_hash = redis.get(f"tg:code_hash:{phone}")
+        phone_code_hash = await redis.get(f"tg:code_hash:{phone}")
         logger.info("Old code hash: %s", phone_code_hash)
 
         if not phone_code_hash:

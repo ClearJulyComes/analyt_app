@@ -37,7 +37,7 @@ async def create_session(user_id, phone):
         logger.info("Session RAW: %s", session_str)
 
         await redis.set(f"tg:session_temp:{phone}", session_str, 300)  # 5 minutes
-        stored = redis.get(f"tg:session_temp:{phone}")
+        stored = await redis.get(f"tg:session_temp:{phone}")
         if isinstance(stored, bytes):
             stored = stored.decode("utf-8")
 
