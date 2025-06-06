@@ -86,7 +86,7 @@ def check_code_status():
             return jsonify({"error": "Missing phone parameter"}), 400
         
         # Check if code is valid (implementation depends on your logic)
-        code_hash = await redis.get(f"tg:code_hash:{phone}")
+        code_hash = redis.get(f"tg:code_hash:{phone}")
         if not code_hash:
             logger.info("No code")
             return jsonify({"status": False, "message": "No verification request found for this phone"})

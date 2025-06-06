@@ -64,8 +64,8 @@ def verify_code():
 
         session_str, me = asyncio.run(create_session(phone, code, phone_code_hash, password))
 
-        await redis.set(f"tg:session:{me.id}", session_str, 60 * 60 * 24)
-        await redis.set(f"tg:phone:{me.id}", phone, 60 * 60 * 24)
+        redis.set(f"tg:session:{me.id}", session_str, ex=60 * 60 * 24)
+        redis.set(f"tg:phone:{me.id}", phone, ex=60 * 60 * 24)
 
         return jsonify({"ok": True, "userId": me.id})
 
