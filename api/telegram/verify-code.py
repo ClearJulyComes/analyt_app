@@ -23,12 +23,11 @@ async def create_session(phone, code, phone_code_hash, password):
     client = None
     try:
         session_str = await redis.get(f"tg:session_temp:{phone}")
+        if session_str:
+            session_str = base64.urlsafe_b64decode(session_str).decode()
 
         logger.info("Session redis: %s", session_str)
         # Ensure string format (decode if bytes)
-        if isinstance(session_str, bytes):
-            session_str = session_str.decode('utf-8')
-            logger.info("Session decode: %s", session_str)
 
         client = TelegramClient(StringSession(session_str), api_id, api_hash)
         await client.connect()
