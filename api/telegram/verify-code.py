@@ -18,8 +18,6 @@ redis = Redis(
     url=os.environ["UPSTASH_REDIS_REST_URL"],
     token=os.environ["UPSTASH_REDIS_REST_TOKEN"]
 )
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
 
 async def create_session(phone, code, phone_code_hash, password):
     client = None
@@ -58,13 +56,13 @@ def verify_code():
             return jsonify({"error": "Missing phone or code"}), 400
 
         # Retrieve code hash
-        phone_code_hash = await redis.get(f"tg:code_hash:{phone}")
+        phone_code_hash = asyncio.run(redis.get(f"tg:code_hash:{phone}"))
         logger.info("Old code hash: %s", phone_code_hash)
 
         if not phone_code_hash:
             return jsonify({"error": "Code expired or not sent"}), 400
 
-        session_str, me = loop.run_until_complete(create_session(phone, code, phone_code_hash, password))
+        session_str, me = asyncio.run(create_session(phone, code, phone_code_hash, password))
 
         await redis.set(f"tg:session:{me.id}", session_str, 60 * 60 * 24)
         await redis.set(f"tg:phone:{me.id}", phone, 60 * 60 * 24)

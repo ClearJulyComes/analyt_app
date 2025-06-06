@@ -23,9 +23,6 @@ redis = Redis(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-
 # ✅ Async function to send the login code
 async def create_session(user_id, phone):
     client = None
@@ -39,7 +36,7 @@ async def create_session(user_id, phone):
         session_b64 = base64.b64encode(session_str.encode()).decode()
 
         await redis.set(f"tg:session_temp:{phone}", session_b64, 300)  # 5 minutes
-        stored = await redis.get(f"tg:session_temp:{phone}")
+        stored = asyncio.run(redis.get(f"tg:session_temp:{phone}"))
         # if isinstance(stored, bytes):
         #     stored = stored.decode("utf-8")
         if stored:
@@ -73,7 +70,7 @@ def send_code():
             return jsonify({"error": "Missing phone"}), 400
 
         # ✅ Run async function inside Flask
-        result = loop.run_until_complete(create_session(user_id, phone))
+        result = asyncio.run(create_session(user_id, phone))
 
         return jsonify(result)
     except Exception as e:
@@ -89,14 +86,14 @@ def check_code_status():
             return jsonify({"error": "Missing phone parameter"}), 400
         
         # Check if code is valid (implementation depends on your logic)
-        code_hash = redis.get(f"tg:code_hash:{phone}")
+        code_hash = asyncio.run(redis.get(f"tg:code_hash:{phone}"))
         if not code_hash:
             logger.info("No code")
-            return jsonify({"status": false, "message": "No verification request found for this phone"})
+            return jsonify({"status": False, "message": "No verification request found for this phone"})
         
         logger.info("Verify code: %s", code_hash)
         return jsonify({
-            "status": true,
+            "status": True,
             "message": "Code hash persist"
         })
     except Exception as e:
