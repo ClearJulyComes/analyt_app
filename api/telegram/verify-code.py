@@ -39,6 +39,8 @@ async def create_session(phone, code, phone_code_hash, password):
         if not password:
             raise Exception("Password required")
         await client.sign_in(password=password)
+        
+        return client.session.save(), await client.get_me()
     finally:
         if client and not client.is_connected():
             await client.disconnect()
