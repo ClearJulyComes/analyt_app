@@ -3,7 +3,7 @@ from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
 import os
-from upstash_redis import Redis
+from upstash_redis.asyncio import Redis
 import logging
 import asyncio
 
@@ -66,8 +66,8 @@ def verify_code():
 
         session_str, me = loop.run_until_complete(create_session(phone, code, phone_code_hash, password))
 
-        redis.set(f"tg:session:{me.id}", session_str, 60 * 60 * 24)
-        redis.set(f"tg:phone:{me.id}", phone, 60 * 60 * 24)
+        await redis.set(f"tg:session:{me.id}", session_str, 60 * 60 * 24)
+        await redis.set(f"tg:phone:{me.id}", phone, 60 * 60 * 24)
 
         return jsonify({"ok": True, "userId": me.id})
 

@@ -7,7 +7,7 @@ from telethon.errors import (
     FloodWaitError
 )
 import os
-from upstash_redis import Redis
+from upstash_redis.asyncio import Redis
 import asyncio
 import logging
 
@@ -36,7 +36,7 @@ async def create_session(user_id, phone):
 
         logger.info("Session RAW: %s", session_str)
 
-        redis.set(f"tg:session_temp:{phone}", session_str, 300)  # 5 minutes
+        await redis.set(f"tg:session_temp:{phone}", session_str, 300)  # 5 minutes
         stored = redis.get(f"tg:session_temp:{phone}")
         if isinstance(stored, bytes):
             stored = stored.decode("utf-8")
@@ -45,8 +45,8 @@ async def create_session(user_id, phone):
         logger.info("Redis readback: %s", stored)
         logger.info("Match? %s", session_str == stored)
 
-        redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
-        redis.set(f"tg:phone:{user_id}", phone, ex=300)
+        await redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
+        await redis.set(f"tg:phone:{user_id}", phone, ex=300)
     except PhoneNumberInvalidError:
         raise Exception("❌ Invalid phone number")
     except PhoneNumberBannedError:

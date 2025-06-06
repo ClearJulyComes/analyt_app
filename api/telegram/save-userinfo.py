@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from upstash_redis import Redis
+from upstash_redis.asyncio import Redis
 import os
 import logging
 import asyncio
@@ -51,8 +51,8 @@ def save_userinfo():
         logger.info("[Session] Created: %s", string_session)
 
         # Save to Redis
-        redis.set(f"tg:session:{user_id}", string_session, ex=60 * 60 * 24)
-        redis.set(f"tg:phone:{user_id}", phone, ex=60 * 60 * 24)
+        await redis.set(f"tg:session:{user_id}", string_session, ex=60 * 60 * 24)
+        await redis.set(f"tg:phone:{user_id}", phone, ex=60 * 60 * 24)
 
         return jsonify({"ok": True})
     except Exception as e:
