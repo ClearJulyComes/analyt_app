@@ -20,8 +20,14 @@ asyncio.set_event_loop(loop)
 async def analyze_messages(user_id, chat_id, limit=100):
     if not chat_id:
         return
-    async with httpx.AsyncClient() as http_client:
-        response = await http_client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
+
+    http_client = None
+    try:
+        http_client = httpx.AsyncClient()
+        response = await http_client.get(
+            f"{WEBAPP_URL}/api/get-userinfo",
+            params={"userId": user_id}
+        )
 
         if response.status_code != 200:
             logger.error("Failed to fetch user info: %s", response.text)
@@ -83,6 +89,9 @@ async def analyze_messages(user_id, chat_id, limit=100):
         finally:
             if client and not client.is_connected():
                 await client.disconnect()
+    finally:
+        if http_client:
+            await http_client.aclose()
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
