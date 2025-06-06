@@ -37,8 +37,7 @@ async def create_session(user_id, phone):
 
         await redis.set(f"tg:session_temp:{phone}", encoded, ex=300)  # 5 minutes
         stored = await redis.get(f"tg:session_temp:{phone}")
-        # if isinstance(stored, bytes):
-        #     stored = stored.decode("utf-8")
+
         if stored:
             stored = base64.urlsafe_b64decode(stored).decode()
 

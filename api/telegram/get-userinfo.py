@@ -2,6 +2,7 @@ from upstash_redis import Redis
 from flask import Flask, request, jsonify
 import os
 import logging
+import base64
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,6 +24,9 @@ def get_session():
     try:
         session = redis.get(f"tg:session:{user_id}")
         phone = redis.get(f"tg:phone:{user_id}")
+
+        if session:
+            session = base64.urlsafe_b64decode(session).decode()
 
         return jsonify({
             "session": session,

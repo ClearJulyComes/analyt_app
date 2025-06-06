@@ -6,6 +6,7 @@ import os
 from upstash_redis.asyncio import Redis
 import logging
 import asyncio
+import base64
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,7 +64,9 @@ def verify_code():
 
         session_str, me = asyncio.run(create_session(phone, code, phone_code_hash, password))
 
-        redis.set(f"tg:session:{me.id}", session_str, ex=60 * 60 * 24)
+        encoded = base64.urlsafe_b64encode(session_str.encode()).decode()
+
+        redis.set(f"tg:session:{me.id}", encoded, ex=60 * 60 * 24)
         redis.set(f"tg:phone:{me.id}", phone, ex=60 * 60 * 24)
 
         return jsonify({"ok": True, "userId": me.id})
