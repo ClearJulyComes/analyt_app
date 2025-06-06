@@ -20,7 +20,7 @@ asyncio.set_event_loop(loop)
 async def analyze_messages(user_id, chat_id, limit=100):
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{WEBAPP_URL}/api/get_userinfo", params={"userId": user_id})
+        response = await client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
 
         if response.status_code == 200:
             data = response.json()
