@@ -171,6 +171,9 @@ async function analyzeRealChat() {
         result.innerHTML = '';
 
         const chatId = await promptForChatId();
+        if (!chatId) {
+          return;
+        }
         
         const analysis = await fetchAnalysis(chatId);
         

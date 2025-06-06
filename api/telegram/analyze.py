@@ -18,7 +18,8 @@ loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
 async def analyze_messages(user_id, chat_id, limit=100):
-
+    if not chat_id:
+        return
     async with httpx.AsyncClient() as http_client:
         response = await http_client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
 
@@ -33,55 +34,55 @@ async def analyze_messages(user_id, chat_id, limit=100):
         if not session or not phone:
             raise ValueError("Missing session or phone in response")
 
-    client = None
-    try:
-        client = TelegramClient(StringSession(session), int(TELEGRAM_API_ID), TELEGRAM_API_HASH)
-        await client.connect()
-        await client.start(phone)
-        entity = await client.get_entity(chat_id)
-        messages = []
-        
-        async for msg in client.iter_messages(entity, limit=limit):
-            messages.append({
-                'sender_id': msg.sender_id,
-                'text': msg.text or "",
-                'date': msg.date
-            })
+        client = None
+        try:
+            client = TelegramClient(StringSession(session), int(TELEGRAM_API_ID), TELEGRAM_API_HASH)
+            await client.connect()
+            await client.start(phone)
+            entity = await client.get_entity(chat_id)
+            messages = []
+            
+            async for msg in client.iter_messages(entity, limit=limit):
+                messages.append({
+                    'sender_id': msg.sender_id,
+                    'text': msg.text or "",
+                    'date': msg.date
+                })
 
-        messages.reverse()  # oldest to newest for chronological logic
+            messages.reverse()  # oldest to newest for chronological logic
 
-        # Analysis containers
-        message_counts = defaultdict(int)
-        sentiment_counts = defaultdict(lambda: defaultdict(int))
-        starter_counts = defaultdict(int)
+            # Analysis containers
+            message_counts = defaultdict(int)
+            sentiment_counts = defaultdict(lambda: defaultdict(int))
+            starter_counts = defaultdict(int)
 
-        last_timestamp = None
-        idle_threshold = timedelta(minutes=60)
-        sentiment_summary, explanation = await get_sentiments_summary(messages)
+            last_timestamp = None
+            idle_threshold = timedelta(minutes=60)
+            sentiment_summary, explanation = await get_sentiments_summary(messages)
 
-        for i, msg in enumerate(messages):
-            sender = msg['sender_id']
-            text = msg['text']
-            timestamp = msg['date']
+            for i, msg in enumerate(messages):
+                sender = msg['sender_id']
+                text = msg['text']
+                timestamp = msg['date']
 
-            # Count messages
-            message_counts[sender] += 1
+                # Count messages
+                message_counts[sender] += 1
 
-            # Conversation starter logic
-            if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
-                starter_counts[sender] += 1
-            last_timestamp = timestamp
+                # Conversation starter logic
+                if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
+                    starter_counts[sender] += 1
+                last_timestamp = timestamp
 
-        return {
-            'message_count': format_stats(message_counts),
-            'starter_stats': format_stats(starter_counts),
-            'sentiment_summary': sentiment_summary,
-            'sentiment_explanation': explanation,
-            'total_messages': len(messages)
-        }
-    finally:
-        if client and not client.is_connected():
-            await client.disconnect()
+            return {
+                'message_count': format_stats(message_counts),
+                'starter_stats': format_stats(starter_counts),
+                'sentiment_summary': sentiment_summary,
+                'sentiment_explanation': explanation,
+                'total_messages': len(messages)
+            }
+        finally:
+            if client and not client.is_connected():
+                await client.disconnect()
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
