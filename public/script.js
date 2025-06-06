@@ -11,8 +11,7 @@ class AuthHelper {
       // 1. Check if we're running in Telegram WebApp
       Telegram.WebApp.expand(); // Expand the web app to full height
       
-      const initData = Telegram.WebApp.initData || Telegram.WebApp.initDataUnsafe;
-      const userId = initData.user?.id;
+      const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
       
       if (!userId) {
         alert("No user ID found in initData");
