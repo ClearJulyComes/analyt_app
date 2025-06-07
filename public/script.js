@@ -52,6 +52,27 @@ class AuthHelper {
     console.log("Showing main application");
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-content").style.display = "block";
+
+    this.loadChats();
+  }
+
+  static async loadChats() {
+    try {
+      const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
+      if (!userId) return;
+
+      const response = await fetch(`/api/list-chats?userId=${userId}`);
+      const data = await response.json();
+
+      if (data.chats) {
+        window.__cachedChats = data.chats;
+        console.log("[DEBUG] Chats preloaded:", data.chats.length);
+      } else {
+        console.warn("No chats found for user");
+      }
+    } catch (error) {
+      console.error("Failed to preload chats:", error);
+    }
   }
 
   static showPhoneInput() {
@@ -207,9 +228,8 @@ async function fetchAnalysis(chatId) {
 }
 
 async function promptForChatId() {
-  const userId = Telegram.WebApp.initDataUnsafe.user?.id;
-  const response = await fetch(`/api/list-chats?userId=${userId}`);
-  const { chats } = await response.json();
+  const cached = window.__cachedChats;
+  const chats = cached || (await (await fetch(`/api/list-chats?userId=${Telegram.WebApp.initDataUnsafe.user?.id}`)).json()).chats;
 
   const modal = document.getElementById("chat-picker");
   modal.innerHTML = `
