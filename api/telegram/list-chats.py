@@ -2,6 +2,7 @@ import os
 import logging
 import base64
 import httpx
+import asyncio
 
 from flask import Flask, request, jsonify
 from upstash_redis import Redis
@@ -49,55 +50,56 @@ async def get_user_session(user_id):
         else:
             session = base64.urlsafe_b64decode(session).decode()
 
-        return session;
+        client = TelegramClient(StringSession(session_data), TELEGRAM_API_ID, TELEGRAM_API_HASH)
+        try:
+            await client.connect()
+            if not await client.is_user_authorized():
+                return jsonify({"error": "Unauthorized"}), 401
+
+            chat_list = []
+
+            async for dialog in client.iter_dialogs(limit=20):
+                entity = dialog.entity
+                if isinstance(entity, (User, Chat, Channel)) and not getattr(entity, 'bot', False):
+                    avatar_base64 = None
+
+                    try:
+                        photo = await client.download_profile_photo(entity, file=bytes)
+                        if photo:
+                            avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
+                    except Exception as e:
+                        logger.warning(f"Failed to get photo for {entity.id}: {e}")
+
+                    chat_list.append({
+                        "chat_id": str(entity.id),
+                        "name": getattr(entity, "title", None) or getattr(entity, "first_name", "Unknown"),
+                        "avatar": avatar_base64
+                    })
+
+            return jsonify({"chats": chat_list})
+        except Exception as e:
+            logger.exception("Chat list fetch failed")
+            return jsonify({"error": str(e)}), 500
+
+        finally:
+            await client.disconnect()
     finally:
         if http_client:
             await http_client.aclose()
 
 
-@app.get("/api/list-chats")
-async def list_chats(user_id: int):
+@app.route("/api/list-chats", methods=['GET'])
+def list_chats():
     user_id = request.args.get("userId")
-
     if not user_id:
         return jsonify({"error": "Missing userId"}), 400
-
-    session_data = await get_user_session(user_id)
-
-    if not session_data:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    client = TelegramClient(StringSession(session_data), TELEGRAM_API_ID, TELEGRAM_API_HASH)
+        
     try:
-        await client.connect()
-        if not await client.is_user_authorized():
-            return jsonify({"error": "Unauthorized"}), 401
+        result = asyncio.run(get_user_session(user_id))
+        if isinstance(result, tuple):
+            return jsonify(result[0]), result[1]  # if unauthorized
 
-        chat_list = []
-
-        async for dialog in client.iter_dialogs(limit=20):
-            entity = dialog.entity
-            if isinstance(entity, (User, Chat, Channel)) and not getattr(entity, 'bot', False):
-                avatar_base64 = None
-
-                try:
-                    photo = await client.download_profile_photo(entity, file=bytes)
-                    if photo:
-                        avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
-                except Exception as e:
-                    logger.warning(f"Failed to get photo for {entity.id}: {e}")
-
-                chat_list.append({
-                    "chat_id": str(entity.id),
-                    "name": getattr(entity, "title", None) or getattr(entity, "first_name", "Unknown"),
-                    "avatar": avatar_base64
-                })
-
-        return jsonify({"chats": chat_list})
-
+        return jsonify(result), 200
     except Exception as e:
         logger.exception("Chat list fetch failed")
         return jsonify({"error": str(e)}), 500
-
-    finally:
-        await client.disconnect()
