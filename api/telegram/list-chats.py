@@ -78,7 +78,9 @@ async def get_user_session(user_id):
                 }
 
             # Run concurrently
+            logger.info("photos download started")
             chat_list = await asyncio.gather(*[get_chat_info(user) for user in user_entities])
+            logger.info("photos download finished")
 
             await client.disconnect()
             return {"chats": chat_list}

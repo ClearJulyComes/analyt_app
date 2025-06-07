@@ -53,12 +53,14 @@ async def get_sentiments_summary(user_blocks):
     }
 
     async with httpx.AsyncClient() as client:
+        logger.info("deepseek request started")
         response = await client.post(
             "https://api.deepseek.com/v1/chat/completions",
             headers=headers,
             json=payload,
             timeout=120.0
         )
+        logger.info("deepseek request ended")
 
         if response.status_code != 200:
             logger.error("[DeepSeek] Error: %s - %s", response.status_code, response.text)
@@ -106,6 +108,8 @@ async def analyze_messages(user_id, chat_id, limit=100):
         entity = await client.get_entity(chat_id)
         messages = []
 
+        logger.info("messages load started")
+
         async for msg in client.iter_messages(entity, limit=limit):
 
             messages.append({
@@ -113,6 +117,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
                 'text': msg.text or "",
                 'date': msg.date
             })
+        logger.info("messages load finished")
 
         messages.reverse()
 
