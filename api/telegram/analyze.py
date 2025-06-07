@@ -130,7 +130,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
             if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
                 starter_counts[sender] += 1
             last_timestamp = timestamp
-        // on this step I want to group messages by sender_id and then switch sender_id to sender_name
+
         grouped_by_sender = defaultdict(list)
         for msg in messages:
             if msg['text'].strip():
