@@ -199,7 +199,7 @@ async function fetchAnalysis(chatId) {
         body: JSON.stringify({
             user_id: Telegram.WebApp.initDataUnsafe.user?.id,
             chat_id: parseInt(chatId),
-            limit: 100
+            limit: 300
         })
     });
     if (!response.ok) throw new Error(await response.text());

@@ -1,147 +1,42 @@
-from http.server import BaseHTTPRequestHandler
-from telethon.sync import TelegramClient
-from telethon.tl.types import InputPeerUser
-import json, os, asyncio
-from telethon.sessions import StringSession
+import os
+import logging
+import base64
+import json
+import re
+import asyncio
+from flask import Flask, request, jsonify
 from collections import defaultdict
 from datetime import datetime, timedelta
+from telethon import TelegramClient
+from telethon.sessions import StringSession
+from telethon.tl.types import User, Chat, Channel
 import httpx
-import logging
-import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+
 WEBAPP_URL = os.getenv('WEBAPP_URL')
-TELEGRAM_API_ID = os.getenv('TELEGRAM_API_ID')
+TELEGRAM_API_ID = int(os.getenv('TELEGRAM_API_ID'))
 TELEGRAM_API_HASH = os.getenv('TELEGRAM_API_HASH')
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
 
-async def analyze_messages(user_id, chat_id, limit=100):
-    if not chat_id:
-        return
-
-    http_client = None
-    try:
-        http_client = httpx.AsyncClient()
-        response = await http_client.get(
-            f"{WEBAPP_URL}/api/get-userinfo",
-            params={"userId": user_id}
-        )
-
-        if response.status_code != 200:
-            logger.error("Failed to fetch user info: %s", response.text)
-            raise Exception(f"Failed to fetch user info: {response.status_code} - {response.text}")
-
-        data = response.json()
-        session = data.get("session")
-        phone = data.get("phone")
-
-        if not session or not phone:
-            raise ValueError("Missing session or phone in response")
-
-        client = None
-        try:
-            client = TelegramClient(StringSession(session), int(TELEGRAM_API_ID), TELEGRAM_API_HASH)
-            await client.connect()
-
-            if not await client.is_user_authorized():
-                await fetch("/api/delete-session", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({ userId: user_id })
-                });
-
-                raise Exception("Session expired - re-authentication required")
-
-            entity = await client.get_entity(chat_id)
-            messages = []
-            
-            async for msg in client.iter_messages(entity, limit=limit):
-                messages.append({
-                    'sender_id': msg.sender_id,
-                    'text': msg.text or "",
-                    'date': msg.date
-                })
-
-            messages.reverse()  # oldest to newest for chronological logic
-
-            # Analysis containers
-            message_counts = defaultdict(int)
-            sentiment_counts = defaultdict(lambda: defaultdict(int))
-            starter_counts = defaultdict(int)
-
-            last_timestamp = None
-            idle_threshold = timedelta(minutes=60)
-            sentiment_summary, explanation = await get_sentiments_summary(messages)
-
-            for i, msg in enumerate(messages):
-                sender = msg['sender_id']
-                text = msg['text']
-                timestamp = msg['date']
-
-                # Count messages
-                message_counts[sender] += 1
-
-                # Conversation starter logic
-                if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
-                    starter_counts[sender] += 1
-                last_timestamp = timestamp
-
-            return {
-                'message_count': format_stats(message_counts),
-                'starter_stats': format_stats(starter_counts),
-                'sentiment_summary': sentiment_summary,
-                'sentiment_explanation': explanation,
-                'total_messages': len(messages)
-            }
-        finally:
-            if client and not client.is_connected():
-                await client.disconnect()
-    finally:
-        if http_client:
-            await http_client.aclose()
-
-class handler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        data = json.loads(self.rfile.read(content_length))
-        
-        try:
-            result = loop.run_until_complete(
-                analyze_messages(
-                    user_id=data['user_id'],
-                    chat_id=data['chat_id'],
-                    limit=data.get('limit', 300)
-                )
-            )
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(result).encode())
-            
-        except Exception as e:
-            self.send_error(500, f"Analysis failed: {str(e)}")
 
 def format_stats(stats):
     total = sum(stats.values())
     if total == 0:
         return {k: f"{v} (0%)" for k, v in stats.items()}
-    return {k: f"{v} ({v/total:.0%})" for k, v in stats.items()}
+    return {k: f"{v} ({v / total:.0%})" for k, v in stats.items()}
+
 
 async def get_sentiments_summary(messages):
-    from collections import defaultdict
-
     grouped = defaultdict(list)
     for msg in messages:
         if msg['text'].strip():
-            grouped[msg['sender_id']].append(msg['text'])
+            grouped[msg['sender_name']].append(msg['text'])
 
     user_blocks = [
-        f"User {user_id}:\n" + "\n".join(f"- {text}" for text in texts)
+        f"{sender_name}:\n" + "\n".join(f"- {text}" for text in texts)
         for user_id, texts in grouped.items()
     ]
 
@@ -172,12 +67,12 @@ async def get_sentiments_summary(messages):
             "https://api.deepseek.com/v1/chat/completions",
             headers=headers,
             json=payload,
-            timeout=120.0  # long enough for batch
+            timeout=120.0
         )
 
         if response.status_code != 200:
-            print(f"[DeepSeek] Error: {response.status_code} - {response.text}")
-            return {}
+            logger.error("[DeepSeek] Error: %s - %s", response.status_code, response.text)
+            return {}, ""
 
         try:
             logger.info("[DeepSeek] Raw response: %s", response.text)
@@ -185,15 +80,106 @@ async def get_sentiments_summary(messages):
             cleaned = re.sub(r"^```json\s*|\s*```$", "", content.strip(), flags=re.DOTALL)
             parsed = json.loads(cleaned)
 
-            # Convert users list into {user_id: sentiment} dict
             sentiment_map = {}
             for entry in parsed.get("users", []):
                 for uid_str, value in entry.items():
-                    sentiment_map[int(uid_str)] = value
+                    sentiment_map[uid_str] = value
 
-            explanation = parsed.get("explanation", "")
-            return sentiment_map, explanation
-
+            return sentiment_map, parsed.get("explanation", "")
         except Exception as e:
-            print(f"[DeepSeek] Failed to parse: {e}")
+            logger.error("[DeepSeek] Failed to parse: %s", e)
             return {}, ""
+
+
+async def analyze_messages(user_id, chat_id, limit=100):
+    http_client = httpx.AsyncClient()
+    try:
+        response = await http_client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
+
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch user info: {response.status_code} - {response.text}")
+
+        data = response.json()
+        session = data.get("session")
+
+        if not session:
+            raise ValueError("Missing session or phone in response")
+
+        session_decoded = base64.urlsafe_b64decode(session).decode()
+        client = TelegramClient(StringSession(session_decoded), TELEGRAM_API_ID, TELEGRAM_API_HASH)
+        await client.connect()
+
+        if not await client.is_user_authorized():
+            # Optional: remove session here via internal request
+            await client.disconnect()
+            raise Exception("Session expired")
+
+        entity = await client.get_entity(chat_id)
+        messages = []
+
+        async for msg in client.iter_messages(entity, limit=limit):
+            sender = await msg.get_sender()
+            if not sender:
+                continue
+
+            # Prefer name -> username -> ID fallback
+            sender_name = (
+                getattr(sender, "first_name", None)
+                or getattr(sender, "username", None)
+                or f"User {sender.id}"
+            )
+
+            messages.append({
+                'sender_name': sender_name,
+                'text': msg.text or "",
+                'date': msg.date
+            })
+
+        messages.reverse()
+
+        message_counts = defaultdict(int)
+        starter_counts = defaultdict(int)
+        last_timestamp = None
+        idle_threshold = timedelta(minutes=60)
+
+        sentiment_summary, explanation = await get_sentiments_summary(messages)
+
+        for i, msg in enumerate(messages):
+            sender = msg['sender_name']
+            text = msg['text']
+            timestamp = msg['date']
+
+            message_counts[sender] += 1
+            if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
+                starter_counts[sender] += 1
+            last_timestamp = timestamp
+
+        await client.disconnect()
+        return {
+            'message_count': format_stats(message_counts),
+            'starter_stats': format_stats(starter_counts),
+            'sentiment_summary': sentiment_summary,
+            'sentiment_explanation': explanation,
+            'total_messages': len(messages)
+        }
+
+    finally:
+        await http_client.aclose()
+
+
+@app.route("/api/analyze", methods=["POST"])
+def analyze_endpoint():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        chat_id = data.get("chat_id")
+        limit = data.get("limit", 100)
+
+        if not user_id or not chat_id:
+            return jsonify({"error": "Missing user_id or chat_id"}), 400
+
+        result = asyncio.run(analyze_messages(user_id, chat_id, limit))
+        return jsonify(result)
+    except Exception as e:
+        logger.exception("Analyze endpoint failed")
+        return jsonify({"error": str(e)}), 500
