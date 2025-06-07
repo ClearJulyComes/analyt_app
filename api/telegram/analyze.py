@@ -36,7 +36,7 @@ async def get_sentiments_summary(user_blocks):
         "2. Add a label: 'negative', 'neutral', or 'positive'.\n"
         "3. If the majority of the messages are in a language other than English (e.g. Russian), explanation in your response — MUST be in that same language.\n"
         "4. In explanation provide psychological portrait of persons and interesting things you found.\n"
-        "5. Return only strict JSON (double-quoted keys and values). Like this:\n"
+        "5. Return only strict JSON (double-quoted keys and values). The `explanation` must be a single string with clear sections per user, like: \"[User A]: ... [User B]: ...\". Like this:\n"
         "{\"users\": [ {\"user1\": \"label - score%\"}, ... ], \"explanation\": \"...\"}\n\n"
         "Messages:\n\n" + "\n\n".join(user_blocks)
     )
@@ -70,7 +70,6 @@ async def get_sentiments_summary(user_blocks):
             content = response.json()["choices"][0]["message"]["content"]
             cleaned = re.sub(r"^```json\s*|\s*```$", "", content.strip(), flags=re.DOTALL)
             parsed = json.loads(cleaned)
-            logger.info("[DeepSeek] users:\n%s and explanation:\n%s", parsed.get("users", []), parsed.get("explanation", ""))
 
             sentiment_map = {}
             for entry in parsed.get("users", []):
