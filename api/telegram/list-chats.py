@@ -54,18 +54,21 @@ async def get_user_session(user_id):
             if not await client.is_user_authorized():
                 return jsonify({"error": "Unauthorized"}), 401
 
-            dialogs = [dialog async for dialog in client.iter_dialogs(limit=20)]
+            dialogs = await client.get_dialogs(limit=20)
             user_entities = [
                 dialog.entity for dialog in dialogs
                 if isinstance(dialog.entity, User)
-                and not dialog.entity.bot
-                and not dialog.entity.is_self
+                and not getattr(dialog.entity, 'bot', False)
+                and not getattr(dialog.entity, 'is_self', False)
             ]
+
+            semaphore = asyncio.Semaphore(5)
 
             async def get_chat_info(entity):
                 avatar_base64 = None
                 try:
-                    photo = await client.download_profile_photo(entity, file=bytes, download_big=False)
+                    async with semaphore:
+                        photo = await client.download_profile_photo(entity, file=bytes, download_big=False)
                     if photo:
                         avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
                 except Exception as e:
@@ -82,7 +85,6 @@ async def get_user_session(user_id):
             chat_list = await asyncio.gather(*[get_chat_info(user) for user in user_entities])
             logger.info("photos download finished")
 
-            await client.disconnect()
             return {"chats": chat_list}
         except Exception as e:
             logger.exception("Chat list fetch failed")
