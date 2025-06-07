@@ -37,7 +37,7 @@ async def get_sentiments_summary(messages):
 
     user_blocks = [
         f"{sender_name}:\n" + "\n".join(f"- {text}" for text in texts)
-        for user_id, texts in grouped.items()
+        for sender_name, texts in grouped.items()
     ]
 
     prompt = (
