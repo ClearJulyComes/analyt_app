@@ -74,10 +74,10 @@ async def get_user_session(user_id):
                         "avatar": avatar_base64
                     })
 
-            return jsonify({"chats": chat_list})
+            return {"chats": chat_list}
         except Exception as e:
             logger.exception("Chat list fetch failed")
-            return jsonify({"error": str(e)}), 500
+            return {"error": str(e)}, 500
 
         finally:
             await client.disconnect()
