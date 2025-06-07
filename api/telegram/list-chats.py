@@ -48,7 +48,7 @@ async def get_user_session(user_id):
         if not session:
             raise ValueError("Missing session or phone in response")
 
-        client = TelegramClient(StringSession(session_data), TELEGRAM_API_ID, TELEGRAM_API_HASH)
+        client = TelegramClient(StringSession(session), TELEGRAM_API_ID, TELEGRAM_API_HASH)
         try:
             await client.connect()
             if not await client.is_user_authorized():
