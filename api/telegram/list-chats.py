@@ -56,13 +56,13 @@ async def get_user_session(user_id):
 
             chat_list = []
 
-            async for dialog in client.iter_dialogs(limit=20):
+            async for dialog in client.iter_dialogs(limit=10):
                 entity = dialog.entity
                 if isinstance(entity, (User, Chat, Channel)) and not getattr(entity, 'bot', False):
                     avatar_base64 = None
 
                     try:
-                        photo = await client.download_profile_photo(entity, file=bytes)
+                        photo = await client.download_profile_photo(entity, file=bytes, download_big=False)
                         if photo:
                             avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
                     except Exception as e:
