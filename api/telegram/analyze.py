@@ -53,14 +53,14 @@ async def get_sentiments_summary(user_blocks):
     }
 
     async with httpx.AsyncClient() as client:
-        logger.info("deepseek request started: %s", prompt)
+        logger.info("deepseek request started")
         response = await client.post(
             "https://api.deepseek.com/v1/chat/completions",
             headers=headers,
             json=payload,
             timeout=120.0
         )
-        logger.info("deepseek request ended: %s", response.text)
+        logger.info("deepseek request ended")
 
         if response.status_code != 200:
             logger.error("[DeepSeek] Error: %s - %s", response.status_code, response.text)
@@ -68,6 +68,7 @@ async def get_sentiments_summary(user_blocks):
 
         try:
             content = response.json()["choices"][0]["message"]["content"]
+            logger.debug("[DeepSeek] Raw response:\n%s", content)
             cleaned = re.sub(r"^```json\s*|\s*```$", "", content.strip(), flags=re.DOTALL)
             parsed = json.loads(cleaned)
 
