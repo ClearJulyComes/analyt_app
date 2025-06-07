@@ -114,7 +114,7 @@ class handler(BaseHTTPRequestHandler):
                 analyze_messages(
                     user_id=data['user_id'],
                     chat_id=data['chat_id'],
-                    limit=data.get('limit', 100)
+                    limit=data.get('limit', 300)
                 )
             )
             

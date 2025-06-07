@@ -56,9 +56,9 @@ async def get_user_session(user_id):
 
             chat_list = []
 
-            async for dialog in client.iter_dialogs(limit=10):
+            async for dialog in client.iter_dialogs(limit=20):
                 entity = dialog.entity
-                if isinstance(entity, (User, Chat, Channel)) and not getattr(entity, 'bot', False):
+                if isinstance(entity, User) and not entity.bot and not entity.is_self:
                     avatar_base64 = None
 
                     try:
