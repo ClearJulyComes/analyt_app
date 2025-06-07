@@ -62,13 +62,19 @@ async def get_user_session(user_id):
                 and not getattr(dialog.entity, 'is_self', False)
             ]
 
+            redis_keys = [f"user_avatar:{entity.id}" for entity in user_entities]
+
+            cached_avatars = await redis.mget(*redis_keys)
+
+            entity_avatar_map = {
+                entity.id: avatar
+                for entity, avatar in zip(user_entities, cached_avatars)
+            }
+
             semaphore = asyncio.Semaphore(10)
 
             async def get_chat_info(entity):
-                redis_key = f"user_avatar:{entity.id}"
-
-                # Try to get cached avatar
-                avatar_base64 = await redis.get(redis_key)
+                avatar_base64 = entity_avatar_map.get(entity.id)
 
                 if not avatar_base64:
                     try:
@@ -76,6 +82,7 @@ async def get_user_session(user_id):
                             photo = await client.download_profile_photo(entity, file=bytes, download_big=False)
                         if photo:
                             avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
+                            redis_key = f"user_avatar:{entity.id}"
                             await redis.set(redis_key, avatar_base64, ex=8640)
                     except Exception as e:
                         logger.warning(f"Failed to get photo for {entity.id}: {e}")
