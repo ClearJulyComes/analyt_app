@@ -67,7 +67,6 @@ async def get_sentiments_summary(user_blocks):
             return {}, ""
 
         try:
-            logger.info("[DeepSeek] Raw response: %s", response.text)
             content = response.json()["choices"][0]["message"]["content"]
             cleaned = re.sub(r"^```json\s*|\s*```$", "", content.strip(), flags=re.DOTALL)
             parsed = json.loads(cleaned)

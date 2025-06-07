@@ -62,17 +62,23 @@ async def get_user_session(user_id):
                 and not getattr(dialog.entity, 'is_self', False)
             ]
 
-            semaphore = asyncio.Semaphore(5)
+            semaphore = asyncio.Semaphore(10)
 
             async def get_chat_info(entity):
-                avatar_base64 = None
-                try:
-                    async with semaphore:
-                        photo = await client.download_profile_photo(entity, file=bytes, download_big=False)
-                    if photo:
-                        avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
-                except Exception as e:
-                    logger.warning(f"Failed to get photo for {entity.id}: {e}")
+                redis_key = f"user_avatar:{entity.id}"
+
+                # Try to get cached avatar
+                avatar_base64 = await redis.get(redis_key)
+
+                if not avatar_base64:
+                    try:
+                        async with semaphore:
+                            photo = await client.download_profile_photo(entity, file=bytes, download_big=False)
+                        if photo:
+                            avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
+                            await redis.set(redis_key, avatar_base64, ex=8640)
+                    except Exception as e:
+                        logger.warning(f"Failed to get photo for {entity.id}: {e}")
 
                 return {
                     "chat_id": str(entity.id),
