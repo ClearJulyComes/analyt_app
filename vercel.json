@@ -35,8 +35,18 @@
       "methods": ["POST"]
     },
     {
+      "src": "/api/delete-session",
+      "dest": "/api/telegram/delete-session.py",
+      "methods": ["POST"]
+    },
+    {
       "src": "/api/get-userinfo",
       "dest": "/api/telegram/get-userinfo.py",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/list-chats",
+      "dest": "/api/telegram/list-chats.py",
       "methods": ["GET"]
     },
     {

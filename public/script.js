@@ -192,12 +192,6 @@ async function analyzeRealChat() {
     }
 }
 
-// Helper functions
-async function promptForChatId() {
-    // In a real app, implement proper chat selection UI
-    return prompt("Enter numeric chat ID (User ID or Group ID with -):");
-}
-
 async function fetchAnalysis(chatId) {
     const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -211,6 +205,47 @@ async function fetchAnalysis(chatId) {
     if (!response.ok) throw new Error(await response.text());
     return response.json();
 }
+
+async function promptForChatId() {
+  const userId = Telegram.WebApp.initDataUnsafe.user?.id;
+  const response = await fetch(`/api/list-chats?userId=${userId}`);
+  const { chats } = await response.json();
+
+  const modal = document.getElementById("chat-picker");
+  modal.innerHTML = `
+    <div class="chat-modal-overlay"></div>
+    <div class="chat-modal">
+      <button class="chat-modal-close">&times;</button>
+      <h3 class="chat-modal-title">Select a Chat</h3>
+      <ul class="chat-list">
+        ${chats.map(chat => `
+          <li class="chat-item" data-chat-id="${chat.chat_id}">
+            <img src="${chat.avatar}" class="chat-avatar" alt="avatar" />
+            <span class="chat-name">${chat.name}</span>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  `;
+  modal.style.display = 'block';
+
+  return new Promise(resolve => {
+    modal.querySelectorAll('.chat-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const chatId = item.getAttribute('data-chat-id');
+        modal.style.display = 'none';
+        resolve(chatId);
+      });
+    });
+
+    modal.querySelector('.chat-modal-close').addEventListener('click', () => {
+      modal.style.display = 'none';
+      resolve(null);
+    });
+  });
+}
+
+
 
 function displayResults(data) {
     const formatStats = (stats, label) => {

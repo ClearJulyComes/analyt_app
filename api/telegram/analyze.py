@@ -46,6 +46,14 @@ async def analyze_messages(user_id, chat_id, limit=100):
             await client.connect()
 
             if not await client.is_user_authorized():
+                await fetch("/api/delete-session", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({ userId: user_id })
+                });
+
                 raise Exception("Session expired - re-authentication required")
 
             entity = await client.get_entity(chat_id)
