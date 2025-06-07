@@ -5,7 +5,7 @@ import httpx
 import asyncio
 
 from flask import Flask, request, jsonify
-from upstash_redis import Redis
+from upstash_redis.asyncio import Redis
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.tl.types import User
