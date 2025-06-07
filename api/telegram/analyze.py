@@ -104,7 +104,16 @@ async def analyze_messages(user_id, chat_id, limit=100):
             await client.disconnect()
             raise Exception("Session expired")
 
-        entity = await client.get_entity(chat_id)
+        entity = None
+        dialogs = await client.get_dialogs()
+        for dialog in dialogs:
+            if str(dialog.entity.id) == str(chat_id):
+                entity = dialog.entity
+                break
+
+        if entity is None:
+            raise ValueError(f"Could not find chat with ID {chat_id} in recent dialogs")
+            
         messages = []
 
         logger.info("messages load started")
