@@ -8,7 +8,7 @@ from flask import Flask, request, jsonify
 from upstash_redis import Redis
 from telethon import TelegramClient
 from telethon.sessions import StringSession
-from telethon.tl.types import User, Chat, Channel
+from telethon.tl.types import User
 from werkzeug.exceptions import HTTPException
 
 
@@ -54,26 +54,33 @@ async def get_user_session(user_id):
             if not await client.is_user_authorized():
                 return jsonify({"error": "Unauthorized"}), 401
 
-            chat_list = []
+            dialogs = [dialog async for dialog in client.iter_dialogs(limit=20)]
+            user_entities = [
+                dialog.entity for dialog in dialogs
+                if isinstance(dialog.entity, User)
+                and not dialog.entity.bot
+                and not dialog.entity.is_self
+            ]
 
-            async for dialog in client.iter_dialogs(limit=20):
-                entity = dialog.entity
-                if isinstance(entity, User) and not entity.bot and not entity.is_self:
-                    avatar_base64 = None
+            async def get_chat_info(entity):
+                avatar_base64 = None
+                try:
+                    photo = await client.download_profile_photo(entity, file=bytes, download_big=False)
+                    if photo:
+                        avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
+                except Exception as e:
+                    logger.warning(f"Failed to get photo for {entity.id}: {e}")
 
-                    try:
-                        photo = await client.download_profile_photo(entity, file=bytes, download_big=False)
-                        if photo:
-                            avatar_base64 = f"data:image/jpeg;base64,{base64.b64encode(photo).decode()}"
-                    except Exception as e:
-                        logger.warning(f"Failed to get photo for {entity.id}: {e}")
+                return {
+                    "chat_id": str(entity.id),
+                    "name": getattr(entity, "title", None) or getattr(entity, "first_name", "Unknown"),
+                    "avatar": avatar_base64
+                }
 
-                    chat_list.append({
-                        "chat_id": str(entity.id),
-                        "name": getattr(entity, "title", None) or getattr(entity, "first_name", "Unknown"),
-                        "avatar": avatar_base64
-                    })
+            # Run concurrently
+            chat_list = await asyncio.gather(*[get_chat_info(user) for user in user_entities])
 
+            await client.disconnect()
             return {"chats": chat_list}
         except Exception as e:
             logger.exception("Chat list fetch failed")

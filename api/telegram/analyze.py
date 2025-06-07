@@ -29,17 +29,7 @@ def format_stats(stats):
     return {k: f"{v} ({v / total:.0%})" for k, v in stats.items()}
 
 
-async def get_sentiments_summary(messages):
-    grouped = defaultdict(list)
-    for msg in messages:
-        if msg['text'].strip():
-            grouped[msg['sender_name']].append(msg['text'])
-
-    user_blocks = [
-        f"{sender_name}:\n" + "\n".join(f"- {text}" for text in texts)
-        for sender_name, texts in grouped.items()
-    ]
-
+async def get_sentiments_summary(user_blocks):
     prompt = (
         "You will be given a list of users and their recent messages. For each user:\n"
         "1. Estimate their overall sentiment score (0% = negative, 100% = positive).\n"
@@ -117,19 +107,9 @@ async def analyze_messages(user_id, chat_id, limit=100):
         messages = []
 
         async for msg in client.iter_messages(entity, limit=limit):
-            sender = await msg.get_sender()
-            if not sender:
-                continue
-
-            # Prefer name -> username -> ID fallback
-            sender_name = (
-                getattr(sender, "first_name", None)
-                or getattr(sender, "username", None)
-                or f"User {sender.id}"
-            )
 
             messages.append({
-                'sender_name': sender_name,
+                'sender_id': msg.sender_id,
                 'text': msg.text or "",
                 'date': msg.date
             })
@@ -141,10 +121,8 @@ async def analyze_messages(user_id, chat_id, limit=100):
         last_timestamp = None
         idle_threshold = timedelta(minutes=60)
 
-        sentiment_summary, explanation = await get_sentiments_summary(messages)
-
         for i, msg in enumerate(messages):
-            sender = msg['sender_name']
+            sender = msg['sender_id']
             text = msg['text']
             timestamp = msg['date']
 
@@ -152,11 +130,48 @@ async def analyze_messages(user_id, chat_id, limit=100):
             if i == 0 or (last_timestamp and (timestamp - last_timestamp) > idle_threshold):
                 starter_counts[sender] += 1
             last_timestamp = timestamp
+        // on this step I want to group messages by sender_id and then switch sender_id to sender_name
+        grouped_by_sender = defaultdict(list)
+        for msg in messages:
+            if msg['text'].strip():
+                grouped_by_sender[msg['sender_id']].append(msg['text'])
+
+        async def fetch_sender_name(sender_id):
+            try:
+                sender = await client.get_entity(sender_id)
+                return sender_id, (
+                    getattr(sender, "first_name", None)
+                    or getattr(sender, "username", None)
+                    or f"User {sender_id}"
+                )
+            except Exception:
+                return sender_id, f"User {sender_id}"
+
+        sender_id_name_pairs = await asyncio.gather(*(fetch_sender_name(sid) for sid in grouped_by_sender.keys()))
+        sender_id_to_name = dict(sender_id_name_pairs)
+
+        message_counts_by_name = defaultdict(int)
+        starter_counts_by_name = defaultdict(int)
+
+        for sender_id, count in message_counts.items():
+            sender_name = sender_id_to_name.get(sender_id, f"User {sender_id}")
+            message_counts_by_name[sender_name] += count
+
+        for sender_id, count in starter_counts.items():
+            sender_name = sender_id_to_name.get(sender_id, f"User {sender_id}")
+            starter_counts_by_name[sender_name] += count
+
+        user_blocks = [
+            f"{sender_id_to_name[sender_id]}:\n" + "\n".join(f"- {text}" for text in texts)
+            for sender_id, texts in grouped_by_sender.items()
+        ]
+
+        sentiment_summary, explanation = await get_sentiments_summary(user_blocks)
 
         await client.disconnect()
         return {
-            'message_count': format_stats(message_counts),
-            'starter_stats': format_stats(starter_counts),
+            'message_count': format_stats(message_counts_by_name),
+            'starter_stats': format_stats(starter_counts_by_name),
             'sentiment_summary': sentiment_summary,
             'sentiment_explanation': explanation,
             'total_messages': len(messages)
