@@ -47,8 +47,6 @@ async def get_user_session(user_id):
 
         if not session:
             raise ValueError("Missing session or phone in response")
-        else:
-            session = base64.urlsafe_b64decode(session).decode()
 
         client = TelegramClient(StringSession(session_data), TELEGRAM_API_ID, TELEGRAM_API_HASH)
         try:
@@ -93,7 +91,7 @@ def list_chats():
     user_id = request.args.get("userId")
     if not user_id:
         return jsonify({"error": "Missing userId"}), 400
-        
+
     try:
         result = asyncio.run(get_user_session(user_id))
         if isinstance(result, tuple):
