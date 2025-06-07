@@ -88,6 +88,7 @@ async def get_user_session(user_id):
 
 @app.route("/api/list-chats", methods=['GET'])
 def list_chats():
+    logger.info("list-chats started")
     user_id = request.args.get("userId")
     if not user_id:
         return jsonify({"error": "Missing userId"}), 400
@@ -96,7 +97,7 @@ def list_chats():
         result = asyncio.run(get_user_session(user_id))
         if isinstance(result, tuple):
             return jsonify(result[0]), result[1]  # if unauthorized
-
+        logger.info("list-chats ended")
         return jsonify(result), 200
     except Exception as e:
         logger.exception("Chat list fetch failed")

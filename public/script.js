@@ -250,7 +250,7 @@ async function promptForChatId() {
 function displayResults(data) {
     const formatStats = (stats, label) => {
         return Object.entries(stats)
-            .map(([user, value]) => `<div>User <strong>${user}</strong>: ${value}</div>`)
+            .map(([user, value]) => `<div><strong>${user}</strong>: ${value}</div>`)
             .join('');
     };
 

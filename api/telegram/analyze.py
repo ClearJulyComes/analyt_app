@@ -168,6 +168,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze_endpoint():
+    logger.info("analyze started")
     try:
         data = request.get_json()
         user_id = data.get("user_id")
@@ -178,6 +179,7 @@ def analyze_endpoint():
             return jsonify({"error": "Missing user_id or chat_id"}), 400
 
         result = asyncio.run(analyze_messages(user_id, chat_id, limit))
+        logger.info("analyze ended")
         return jsonify(result)
     except Exception as e:
         logger.exception("Analyze endpoint failed")
