@@ -36,8 +36,8 @@ async def get_sentiments_summary(user_blocks):
         "2. Add a label: 'negative', 'neutral', or 'positive'.\n"
         "3. If the majority of the messages are in a language other than English (e.g. Russian), explanation in your response — MUST be in that same language.\n"
         "4. In explanation provide psychological portrait of persons and interesting things you found.\n"
-        "5. Return JSON only with structure:\n"
-        "{users: [ {user1: 'label - score%'}, ... ], explanation: '...'}\n\n"
+        "5. Return only strict JSON (double-quoted keys and values). Like this:\n"
+        "{\"users\": [ {\"user1\": \"label - score%\"}, ... ], \"explanation\": \"...\"}\n\n"
         "Messages:\n\n" + "\n\n".join(user_blocks)
     )
 
@@ -60,7 +60,7 @@ async def get_sentiments_summary(user_blocks):
             json=payload,
             timeout=120.0
         )
-        logger.info("deepseek request ended")
+        logger.info("deepseek request ended: %s", response.text)
 
         if response.status_code != 200:
             logger.error("[DeepSeek] Error: %s - %s", response.status_code, response.text)
@@ -113,7 +113,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
 
         if entity is None:
             raise ValueError(f"Could not find chat with ID {chat_id} in recent dialogs")
-            
+
         messages = []
 
         logger.info("messages load started")
