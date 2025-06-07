@@ -105,8 +105,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
         if not session:
             raise ValueError("Missing session or phone in response")
 
-        session_decoded = base64.urlsafe_b64decode(session).decode()
-        client = TelegramClient(StringSession(session_decoded), TELEGRAM_API_ID, TELEGRAM_API_HASH)
+        client = TelegramClient(StringSession(session), TELEGRAM_API_ID, TELEGRAM_API_HASH)
         await client.connect()
 
         if not await client.is_user_authorized():
