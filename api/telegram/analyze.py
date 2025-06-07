@@ -53,7 +53,7 @@ async def get_sentiments_summary(user_blocks):
     }
 
     async with httpx.AsyncClient() as client:
-        logger.info("deepseek request started")
+        logger.info("deepseek request started: %s", prompt)
         response = await client.post(
             "https://api.deepseek.com/v1/chat/completions",
             headers=headers,
