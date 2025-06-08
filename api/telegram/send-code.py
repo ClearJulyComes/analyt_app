@@ -34,10 +34,10 @@ async def create_session(user_id, phone):
         logger.info("Session RAW: %s", session_str)
         encoded = base64.urlsafe_b64encode(session_str.encode()).decode()
 
-        await redis.set(f"tg:session_temp:{phone}", encoded, ex=300)  # 5 minutes
+        await redis.set(f"tg:session_temp:{phone}", encoded, ex=600)  # 5 minutes
 
-        await redis.set(f"tg:code_hash:{user_id}", sent.phone_code_hash, ex=300)
-        await redis.set(f"tg:phone:{user_id}", phone, ex=300)
+        await redis.set(f"tg:code_hash:{user_id}", sent.phone_code_hash, ex=600)
+        await redis.set(f"tg:phone:{user_id}", phone, ex=600)
     except PhoneNumberInvalidError:
         raise Exception("❌ Invalid phone number")
     except PhoneNumberBannedError:
