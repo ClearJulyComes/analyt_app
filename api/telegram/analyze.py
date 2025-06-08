@@ -6,7 +6,7 @@ import re
 import asyncio
 import datetime
 import httpx
-from flask import Flask, request, jsonify
+from quart import Quart, request, jsonify
 from collections import defaultdict
 from datetime import datetime, timedelta
 from telethon import TelegramClient
@@ -17,7 +17,7 @@ from upstash_redis.asyncio import Redis
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+app = Quart(__name__)
 
 WEBAPP_URL = os.getenv('WEBAPP_URL')
 TELEGRAM_API_ID = int(os.getenv('TELEGRAM_API_ID'))
@@ -225,9 +225,9 @@ async def get_cached_analysis(key: str) -> dict:
 
 
 @app.route("/api/analyze", methods=["POST"])
-def analyze_endpoint():
+async def analyze_endpoint():
     try:
-        data = request.get_json()
+        data = await request.get_json()
         user_id = data.get("user_id")
         chat_id = data.get("chat_id")
         limit = data.get("limit", 100)
@@ -237,7 +237,7 @@ def analyze_endpoint():
 
         if not force_refresh:
             logger.info("Get cashed analyze for: %s", chat_id)
-            cached = asyncio.run(get_cached_analysis(cache_key))
+            cached = await get_cached_analysis(cache_key)
             if cached:
                 return jsonify({
                     **cached,
@@ -245,12 +245,12 @@ def analyze_endpoint():
                     "cached_at": cached.get("cached_at")
                 })
             else:
-                return {}
+                return None
 
         if not user_id or not chat_id:
             return jsonify({"error": "Missing user_id or chat_id"}), 400
 
-        result = asyncio.run(analyze_messages(user_id, chat_id, limit))
+        result = await analyze_messages(user_id, chat_id, limit)
         logger.info("analyze ended")
         return jsonify(result)
     except Exception as e:

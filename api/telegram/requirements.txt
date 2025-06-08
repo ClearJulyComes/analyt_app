@@ -5,3 +5,4 @@ Flask==2.3.3
 upstash-redis
 python-dotenv==1.0.1
 requests==2.31.0
+quart
