@@ -245,7 +245,7 @@ async def analyze_endpoint():
                     "cached_at": cached.get("cached_at")
                 })
             else:
-                return None
+                return jsonify({"error": "No cache"}), 404
 
         if not user_id or not chat_id:
             return jsonify({"error": "Missing user_id or chat_id"}), 400
