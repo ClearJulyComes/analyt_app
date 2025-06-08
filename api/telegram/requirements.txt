@@ -6,3 +6,4 @@ upstash-redis
 python-dotenv==1.0.1
 requests==2.31.0
 quart==0.18.3
+werkzeug<2.3
