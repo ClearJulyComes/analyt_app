@@ -1,4 +1,3 @@
-from flask import Flask, request, jsonify
 from telethon.sessions import StringSession
 from telethon import TelegramClient  # ✅ Use async version
 from telethon.errors import (
@@ -6,13 +5,14 @@ from telethon.errors import (
     PhoneNumberBannedError,
     FloodWaitError
 )
+from quart import Quart, request, jsonify
 import os
 from upstash_redis.asyncio import Redis
 import asyncio
 import logging
 import base64
 
-app = Flask(__name__)
+app = Quart(__name__)
 
 api_id = int(os.environ["TELEGRAM_API_ID"])
 api_hash = os.environ["TELEGRAM_API_HASH"]
@@ -52,7 +52,7 @@ async def create_session(user_id, phone):
             await client.disconnect()
 
 @app.route("/api/send-code", methods=["POST"])
-def send_code():
+async def send_code():
     try:
         data = request.get_json()
         phone = data.get("phone")
@@ -61,14 +61,14 @@ def send_code():
             return jsonify({"error": "Missing phone"}), 400
 
         # ✅ Run async function inside Flask
-        result = asyncio.run(create_session(user_id, phone))
+        result = await create_session(user_id, phone)
 
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/check-code-status", methods=["GET"])
-def check_code_status():
+async def check_code_status():
     try:
         # Get parameters from query string
         user_id = request.args.get("userId")
@@ -76,12 +76,12 @@ def check_code_status():
         if not user_id:
             return jsonify({"error": "Missing user_id parameter"}), 400
         
-        code_hash = redis.get(f"tg:code_hash:{user_id}")
+        code_hash = await redis.get(f"tg:code_hash:{user_id}")
         if not code_hash:
             logger.info("No code")
             return jsonify({"status": False, "message": "No verification request found for this phone"})
 
-        phone = redis.get(f"tg:phone:{user_id}")
+        phone = await redis.get(f"tg:phone:{user_id}")
         
         logger.info("Verify code: %s", code_hash)
         return jsonify({
@@ -91,7 +91,3 @@ def check_code_status():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# This is important for Vercel to recognize the Flask app
-if __name__ == '__main__':
-    app.run()
