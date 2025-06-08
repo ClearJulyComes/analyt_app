@@ -47,11 +47,13 @@ class AuthHelper {
 
   static showApp() {
     console.log("Showing main application");
+    this.loadChats();
+    this.loadCachedAnalysis()
+
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-content").style.display = "block";
 
-    this.loadChats();
-    this.loadCachedAnalysis()
+    alert("Welcome! You can choose dialog to analyze by pressing 'Analize Chat'.")
   }
 
   static async loadChats() {
@@ -425,7 +427,6 @@ async function updateAnalysis(chatId) {
   const result = document.getElementById('result');
   
   try {
-      loading.style.display = 'block';
       result.innerHTML = '<div class="loading-text">Updating analysis...</div>';
 
       const response = await fetch('/api/analyze', {
