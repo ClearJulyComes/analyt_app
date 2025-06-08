@@ -200,7 +200,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
             'sentiment_explanation': explanation,
             'total_messages': len(messages),
             'last_message_id': messages[-1]['id'] if messages else None,
-            'cached_at': datetime.datetime.now()
+            'cached_at': datetime.now().isoformat()
         }
 
         cache_key = generate_cache_key(user_id, chat_id)

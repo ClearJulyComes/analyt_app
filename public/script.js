@@ -251,7 +251,6 @@ async function analyzeRealChat() {
         if (!chatId) {
           return;
         }
-        alert("Chat_id start fetching");
         
         const analysis = await fetchAnalysis(chatId);
         
