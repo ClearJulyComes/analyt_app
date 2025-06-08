@@ -54,13 +54,12 @@ async def create_session(user_id, phone):
 @app.route("/api/send-code", methods=["POST"])
 async def send_code():
     try:
-        data = request.get_json()
+        data = await request.get_json()
         phone = data.get("phone")
         user_id = data.get("userId")
         if not phone:
             return jsonify({"error": "Missing phone"}), 400
 
-        # ✅ Run async function inside Flask
         result = await create_session(user_id, phone)
 
         return jsonify(result)
