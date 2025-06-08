@@ -241,8 +241,7 @@ async def analyze_endpoint():
             if cached:
                 return jsonify({
                     **cached,
-                    "is_cached": True,
-                    "cached_at": cached.get("cached_at")
+                    "is_cached": True
                 })
             else:
                 return jsonify({"error": "No cache"}), 404

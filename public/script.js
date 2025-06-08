@@ -51,6 +51,7 @@ class AuthHelper {
     document.getElementById("app-content").style.display = "block";
 
     this.loadChats();
+    this.loadCachedAnalysis()
   }
 
   static async loadChats() {
@@ -72,22 +73,50 @@ class AuthHelper {
     }
   }
 
-  static async loadCachedAnalysis(chatId) {
+  static async loadChatsCache() {
+    try {
+      const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
+      if (!userId) return;
+
+      const response = await fetch(`/api/list-chats?userId=${userId}`);
+      const data = await response.json();
+
+      if (data.chats) {
+        window.__cachedChats = data.chats;
+        console.log("[DEBUG] Chats preloaded:", data.chats.length);
+      } else {
+        console.warn("No chats found for user");
+      }
+    } catch (error) {
+      console.error("Failed to preload chats:", error);
+    }
+  }
+
+  static async loadCachedAnalysis() {
     try {
       const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
       if (!userId) return null;
+      const cached_chats = window.__cachedChats;
+      let cache_chat_ids;
+      cached_chats.map(chat -> cache_chat_ids.add(chat.chat_id));
 
-      const response = await fetch('/api/analyze', {
+      const response = await fetch('/api/cached-chats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id: userId,
-          chat_id: parseInt(chatId),
-          force_refresh: false
+          chat_ids: cache_chat_ids
         })
       });
       
-      return await response.json();
+      const data = await response.json();
+
+      if (data) {
+        window.__cachedAnalyse = data;
+        console.log("[DEBUG] Chats analyse preloaded:", data.length);
+      } else {
+        console.warn("No chats cache found for user");
+      }
     } catch (error) {
       console.error("Cache load failed:", error);
       return null;
@@ -237,7 +266,8 @@ async function fetchAnalysis(chatId) {
         body: JSON.stringify({
             user_id: Telegram.WebApp.initDataUnsafe.user?.id,
             chat_id: parseInt(chatId),
-            limit: 300
+            limit: 300,
+            force_refresh: true
         })
     });
     if (!response.ok) throw new Error(await response.text());
@@ -270,11 +300,12 @@ async function promptForChatId() {
     </div>
   `;
   modal.style.display = 'block';
+  const cachedAnalyse = window.__cachedAnalyse;
 
   await Promise.all(chats.map(async chat => {
     const previewEl = document.getElementById(`preview-${chat.chat_id}`);
     try {
-      const cached = await AuthHelper.loadCachedAnalysis(chat.chat_id);
+      const cached = cachedAnalyse.get(chat.chat_id);
       previewEl.innerHTML = cached && !cached.error ? `
         <div class="cached-preview">
           <div class="cached-preview-header">

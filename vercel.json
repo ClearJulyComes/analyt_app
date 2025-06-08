@@ -20,6 +20,11 @@
       "methods": ["POST"]
     },
     {
+      "src": "/api/cached-chats",
+      "dest": "/api/telegram/cached-chats.py",
+      "methods": ["POST"]
+    },
+    {
       "src": "/api/send-code",
       "dest": "/api/telegram/send-code.py",
       "methods": ["POST"]
