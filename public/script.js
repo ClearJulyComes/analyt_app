@@ -366,6 +366,7 @@ async function promptForChatId() {
 
 function displayResults(data) {
   const result = document.getElementById('result');
+  const loading = document.getElementById('loading');
   if (!result) return;
   const formatStats = (stats, label) => {
     return Object.entries(stats)
@@ -384,6 +385,7 @@ function displayResults(data) {
         🔄 Update Report
     </button>
   `;
+  loading.style.display = 'none';
 
   result.innerHTML = `
       <div class="analysis-card">
