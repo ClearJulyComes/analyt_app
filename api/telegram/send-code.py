@@ -23,7 +23,6 @@ redis = Redis(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ✅ Async function to send the login code
 async def create_session(user_id, phone):
     client = None
     try:
