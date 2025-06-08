@@ -346,11 +346,10 @@ async function promptForChatId() {
           const chatId = item.getAttribute('data-chat-id');
           modal.style.display = 'none';
 
-          const cached = await getCachedAnalysis(chat.chat_id);
+          const cached = await getCachedAnalysis(chatId);
           if (cached && !cached.error) {
             displayResults(cached);
           }
-          alert("Alert display");
 
           resolve(chatId);
         })();
