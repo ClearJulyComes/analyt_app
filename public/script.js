@@ -251,6 +251,7 @@ async function analyzeRealChat() {
         if (!chatId) {
           return;
         }
+        alert("Chat_id start fetching");
         
         const analysis = await fetchAnalysis(chatId);
         
@@ -349,10 +350,11 @@ async function promptForChatId() {
           if (cached && !cached.error) {
             displayResults(cached);
           }
+          alert("Alert display");
 
           resolve(chatId);
         })();
-        });
+      }); 
     });
 
     modal.querySelector('.chat-modal-close').addEventListener('click', () => {
