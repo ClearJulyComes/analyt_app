@@ -214,10 +214,7 @@ def generate_cache_key(user_id: str, chat_id: str) -> str:
     return f"tganalysis:{user_id}:{chat_id}"
 
 async def cache_analysis(key: str, data: dict):
-    await redis.set(
-        name=key,
-        value=json.dumps(data)
-    )
+    await redis.set(key, json.dumps(data))
 
 async def get_cached_analysis(key: str) -> dict:
     """Retrieve cached analysis if exists"""
