@@ -238,7 +238,7 @@ def analyze_endpoint():
         cache_key = f"tganalysis:{user_id}:{chat_id}"
 
         if not force_refresh:
-            cached = await get_cached_analysis(cache_key)
+            cached = asyncio.run(get_cached_analysis(cache_key))
             if cached:
                 return jsonify({
                     **cached,
