@@ -73,22 +73,25 @@ class AuthHelper {
     }
   }
 
-  static async loadChatsCache() {
+  static async loadCachedChat(chatId) {
     try {
       const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
-      if (!userId) return;
+      if (!userId) return null;
 
-      const response = await fetch(`/api/list-chats?userId=${userId}`);
-      const data = await response.json();
-
-      if (data.chats) {
-        window.__cachedChats = data.chats;
-        console.log("[DEBUG] Chats preloaded:", data.chats.length);
-      } else {
-        console.warn("No chats found for user");
-      }
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          chat_id: parseInt(chatId),
+          force_refresh: false
+        })
+      });
+      
+      return await response.json();
     } catch (error) {
-      console.error("Failed to preload chats:", error);
+      console.error("Cache load failed:", error);
+      return null;
     }
   }
 
@@ -96,9 +99,12 @@ class AuthHelper {
     try {
       const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
       if (!userId) return null;
-      const cached_chats = window.__cachedChats;
-      let cache_chat_ids;
-      cached_chats.map(chat -> cache_chat_ids.add(chat.chat_id));
+
+      const cache_chat_ids = window.__cachedChats?.map(chat => chat.chat_id) || [];
+      if (cache_chat_ids.length === 0) {
+          console.warn("No chats available for analysis preloading");
+          return null;
+      }
 
       const response = await fetch('/api/cached-chats', {
         method: 'POST',
@@ -108,15 +114,19 @@ class AuthHelper {
           chat_ids: cache_chat_ids
         })
       });
+
+      if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
       
       const data = await response.json();
-
       if (data) {
-        window.__cachedAnalyse = data;
-        console.log("[DEBUG] Chats analyse preloaded:", data.length);
-      } else {
-        console.warn("No chats cache found for user");
+        window.__cachedAnalyse = new Map(
+            Object.entries(data).map(([chat_id, analysis]) => [chat_id, analysis])
+        );
       }
+
+      return null;
     } catch (error) {
       console.error("Cache load failed:", error);
       return null;
@@ -275,8 +285,8 @@ async function fetchAnalysis(chatId) {
 }
 
 async function promptForChatId() {
-  const cached = window.__cachedChats;
-  const chats = cached || (await (await fetch(`/api/list-chats?userId=${Telegram.WebApp.initDataUnsafe.user?.id}`)).json()).chats;
+  const cachedChats = window.__cachedChats;
+  const chats = cachedChats || (await (await fetch(`/api/list-chats?userId=${Telegram.WebApp.initDataUnsafe.user?.id}`)).json()).chats;
 
   const modal = document.getElementById("chat-picker");
   modal.innerHTML = `
@@ -300,12 +310,15 @@ async function promptForChatId() {
     </div>
   `;
   modal.style.display = 'block';
-  const cachedAnalyse = window.__cachedAnalyse;
+
+  const getCachedAnalysis = async (chatId) => {
+    return window.__cachedAnalyse?.get(chatId) || await AuthHelper.loadCachedChat(chatId);
+  };
 
   await Promise.all(chats.map(async chat => {
     const previewEl = document.getElementById(`preview-${chat.chat_id}`);
     try {
-      const cached = cachedAnalyse.get(chat.chat_id);
+      const cached = await getCachedAnalysis(chat.chat_id);
       previewEl.innerHTML = cached && !cached.error ? `
         <div class="cached-preview">
           <div class="cached-preview-header">
@@ -332,7 +345,7 @@ async function promptForChatId() {
           const chatId = item.getAttribute('data-chat-id');
           modal.style.display = 'none';
 
-          const cached = await AuthHelper.loadCachedAnalysis(chatId);
+          const cached = await getCachedAnalysis(chat.chat_id);
           if (cached && !cached.error) {
             displayResults(cached);
           }
