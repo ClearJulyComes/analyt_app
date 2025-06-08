@@ -8,8 +8,7 @@ class AuthHelper {
     console.log("Starting authentication process");
     
     try {
-      // 1. Check if we're running in Telegram WebApp
-      Telegram.WebApp.expand(); // Expand the web app to full height
+      Telegram.WebApp.expand();
       
       const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
       
@@ -21,7 +20,6 @@ class AuthHelper {
 
       console.log("Checking user session for ID:", userId);
       
-      // 2. Check Redis via your backend
       const response = await fetch(`/api/get-userinfo?userId=${userId}`);
       const data = await response.json();
       
@@ -30,7 +28,6 @@ class AuthHelper {
         return;
       }
 
-      // 3. Check if we have a verification in progress
       const statusResponse = await fetch(`/api/check-code-status?userId=${userId}`);
       const statusData = await statusResponse.json();
 
@@ -134,7 +131,6 @@ class AuthHelper {
   }
 }
 
-// Make these functions available globally
 window.submitPhone = async function() {
   const phone = document.getElementById("phone-input").value;
   const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
@@ -204,7 +200,6 @@ window.submitPassword = async function(phone, code) {
   }
 }
 
-// Add debug prints to all functions
 async function analyzeRealChat() {
     const loading = document.getElementById('loading');
     const result = document.getElementById('result');
@@ -274,43 +269,41 @@ async function promptForChatId() {
   `;
   modal.style.display = 'block';
 
-  chats.forEach(async chat => {
+  await Promise.all(chats.map(async chat => {
     const previewEl = document.getElementById(`preview-${chat.chat_id}`);
     try {
       const cached = await AuthHelper.loadCachedAnalysis(chat.chat_id);
-      if (cached && !cached.error) {
-        previewEl.innerHTML = `
-          <div class="cached-preview">
-            <span>Last analyzed: ${new Date(cached.cached_at).toLocaleDateString()}</span>
-            <div class="mini-sentiment">
-              ${Object.entries(cached.sentiment_summary)
-                .map(([user, sentiment]) => 
-                  `<span class="sentiment-tag">${user}: ${sentiment}</span>`
-                ).join('')}
-            </div>
+      previewEl.innerHTML = cached && !cached.error ? `
+        <div class="cached-preview">
+          <span>Last analyzed: ${new Date(cached.cached_at).toLocaleDateString()}</span>
+          <div class="mini-sentiment">
+            ${Object.entries(cached.sentiment_summary || {})
+              .map(([user, sentiment]) => 
+                `<span class="sentiment-tag">${user}: ${sentiment}</span>`
+              ).join('')}
           </div>
-        `;
-      } else {
-        previewEl.innerHTML = '<div class="no-cache">No cached analysis</div>';
-      }
+        </div>
+      ` : '<div class="no-cache">No cached analysis</div>';
     } catch (error) {
-      previewEl.innerHTML = '';
+      previewEl.innerHTML = '<div class="no-cache">Error loading</div>';
     }
-  });
+  }));
 
   return new Promise(resolve => {
     modal.querySelectorAll('.chat-item').forEach(item => {
       item.addEventListener('click', () => {
-        const chatId = item.getAttribute('data-chat-id');
-        modal.style.display = 'none';
+        (async () => {
+          const chatId = item.getAttribute('data-chat-id');
+          modal.style.display = 'none';
 
-        const cached = await AuthHelper.loadCachedAnalysis(chatId);
-        if (cached && !cached.error) {
-          displayResults(cached);
-        }
-        
-        resolve(chatId);
-      });
+          const cached = await AuthHelper.loadCachedAnalysis(chatId);
+          if (cached && !cached.error) {
+            displayResults(cached);
+          }
+
+          resolve(chatId);
+        })();
+        });
     });
 
     modal.querySelector('.chat-modal-close').addEventListener('click', () => {
@@ -323,62 +316,64 @@ async function promptForChatId() {
 
 
 function displayResults(data) {
-    const formatStats = (stats, label) => {
-        return Object.entries(stats)
-            .map(([user, value]) => `<div><strong>${user}</strong>: ${value}</div>`)
-            .join('');
-    };
+  const result = document.getElementById('result');
+  if (!result) return;
+  const formatStats = (stats, label) => {
+    return Object.entries(stats)
+      .map(([user, value]) => `<div><strong>${user}</strong>: ${value}</div>`)
+      .join('');
+  };
 
-    const cachedBadge = data.is_cached ? `
-        <div class="cached-badge">
-            ⏱️ Cached report (${new Date(data.cached_at).toLocaleString()})
-        </div>
-    ` : '';
+  const cachedBadge = data.is_cached ? `
+    <div class="cached-badge">
+        ⏱️ Cached report (${new Date(data.cached_at).toLocaleString()})
+    </div>
+  ` : '';
 
-    const updateButton = `
-        <button id="update-report-btn" class="tg-button">
-            🔄 Update Report
-        </button>
-    `;
+  const updateButton = `
+    <button id="update-report-btn" class="tg-button">
+        🔄 Update Report
+    </button>
+  `;
 
-    result.innerHTML = `
-        <div class="analysis-card">
-            ${cachedBadge}
-            <h3>Chat Analysis</h3>
+  result.innerHTML = `
+      <div class="analysis-card">
+          ${cachedBadge}
+          <h3>Chat Analysis</h3>
 
-            <div class="metric">
-                <span class="metric-title">Conversation starters:</span>
-                <div class="metric-value">
-                    ${formatStats(data.starter_stats, 'Starter')}
-                </div>
-            </div>
-
-            <div class="metric">
-                <span class="metric-title">Message counts:</span>
-                <div class="metric-value">
-                    ${formatStats(data.message_count, 'Messages')}
-                </div>
-            </div>
-
-            <div class="metric metric-flex-column">
-              <div class="metric-row">
-                <span class="metric-title">Sentiment Analysis:</span>
-                <div class="metric-value sentiment-summary">${formatStats(data.sentiment_summary, 'Sentiment')}</div>
+          <div class="metric">
+              <span class="metric-title">Conversation starters:</span>
+              <div class="metric-value">
+                  ${formatStats(data.starter_stats, 'Starter')}
               </div>
-              <div class="metric-explanation">${data.sentiment_explanation}</div>
-            </div>
+          </div>
 
-            <div class="metric">
-                <span class="metric-title">Total analyzed:</span>
-                <span class="metric-value">${data.total_messages} messages</span>
-            </div>
-            ${updateButton}
-        </div>
-    `;
+          <div class="metric">
+              <span class="metric-title">Message counts:</span>
+              <div class="metric-value">
+                  ${formatStats(data.message_count, 'Messages')}
+              </div>
+          </div>
 
-    document.getElementById('update-report-btn')?.addEventListener('click', async () => {
-        await updateAnalysis(data.chat_id); // Pass the original chat ID
-    });
+          <div class="metric metric-flex-column">
+            <div class="metric-row">
+              <span class="metric-title">Sentiment Analysis:</span>
+              <div class="metric-value sentiment-summary">${formatStats(data.sentiment_summary, 'Sentiment')}</div>
+            </div>
+            <div class="metric-explanation">${data.sentiment_explanation}</div>
+          </div>
+
+          <div class="metric">
+              <span class="metric-title">Total analyzed:</span>
+              <span class="metric-value">${data.total_messages} messages</span>
+          </div>
+          ${updateButton}
+      </div>
+  `;
+
+  document.getElementById('update-report-btn')?.addEventListener('click', async () => {
+      await updateAnalysis(data.chat_id);
+  });
 }
 
 async function updateAnalysis(chatId) {
@@ -413,7 +408,6 @@ async function updateAnalysis(chatId) {
   }
 }
 
-// Update event listener with debug
 document.getElementById('analyze-btn').addEventListener('click', () => {
     console.log("[DEBUG] Analyze button clicked");
     analyzeRealChat().catch(console.error);
