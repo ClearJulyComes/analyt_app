@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.tl.types import User, Chat, Channel
+from upstash_redis.asyncio import Redis
 import httpx
 
 logging.basicConfig(level=logging.INFO)
@@ -20,6 +21,10 @@ app = Flask(__name__)
 WEBAPP_URL = os.getenv('WEBAPP_URL')
 TELEGRAM_API_ID = int(os.getenv('TELEGRAM_API_ID'))
 TELEGRAM_API_HASH = os.getenv('TELEGRAM_API_HASH')
+redis = Redis(
+    url=os.environ["UPSTASH_REDIS_REST_URL"],
+    token=os.environ["UPSTASH_REDIS_REST_TOKEN"]
+)
 
 
 def format_stats(stats):
@@ -31,14 +36,18 @@ def format_stats(stats):
 
 async def get_sentiments_summary(user_blocks):
     prompt = (
-        "You will be given a list of users and their recent messages. For each user:\n"
-        "1. Estimate their overall sentiment score (0% = negative, 100% = positive).\n"
-        "2. Add a label: 'negative', 'neutral', or 'positive'.\n"
-        "3. If the majority of the messages are in a language other than English (e.g. Russian), explanation in your response — MUST be in that same language.\n"
-        "4. In explanation provide psychological portrait of persons and interesting things you found.\n"
-        "5. Return only strict JSON (double-quoted keys and values). The `explanation` must be a single string with clear sections per user and second user info should be from new line, like: \"[User A]: ... \n[User B]: ...\". Like this:\n"
+        "Analyze this conversation chronologically. For each participant:\n"
+        "1. Track sentiment evolution (0-100% scores over time)\n"
+        "2. Final sentiment label (negative/neutral/positive)\n"
+        "3. Psychological portrait focusing on:\n"
+        "   - Communication style\n"
+        "   - Emotional patterns\n"
+        "   - Possible personality traits\n"
+        "4. Interaction dynamics between them\n\n"
+        "5. If the majority of the messages are in a language other than English (e.g. Russian), explanation in your response — MUST be in that same language.\n"
+        "6. Return only strict JSON (double-quoted keys and values). The `explanation` must be a single string with clear sections per user and second user info should be from new line, like: \"[User A]: ... \n[User B]: ...\". Like this:\n"
         "{\"users\": [ {\"user1\": \"label - score%\"}, ... ], \"explanation\": \"...\"}\n\n"
-        "Messages:\n\n" + "\n\n".join(user_blocks)
+        "Messages in chronological order:\n\n" + "\n\n".join(user_blocks)
     )
 
     headers = {
@@ -123,7 +132,8 @@ async def analyze_messages(user_id, chat_id, limit=100):
             messages.append({
                 'sender_id': msg.sender_id,
                 'text': msg.text or "",
-                'date': msg.date
+                'date': msg.date,
+                'id': msg.id
             })
         logger.info("messages load finished")
 
@@ -182,16 +192,37 @@ async def analyze_messages(user_id, chat_id, limit=100):
         sentiment_summary, explanation = await get_sentiments_summary(user_blocks)
 
         await client.disconnect()
-        return {
+        result = {
             'message_count': format_stats(message_counts_by_name),
             'starter_stats': format_stats(starter_counts_by_name),
             'sentiment_summary': sentiment_summary,
             'sentiment_explanation': explanation,
-            'total_messages': len(messages)
+            'total_messages': len(messages),
+            'last_message_id': messages[-1]['id'] if messages else None
         }
+
+        cache_key = generate_cache_key(user_id, chat_id)
+
+        await cache_analysis(cache_key, result)
+
+        return result
 
     finally:
         await http_client.aclose()
+
+def generate_cache_key(user_id: str, chat_id: str) -> str:
+    return f"tganalysis:{user_id}:{chat_id}"
+
+async def cache_analysis(key: str, data: dict):
+    await redis.set(
+        name=key,
+        value=json.dumps(data)
+    )
+
+async def get_cached_analysis(key: str) -> dict:
+    """Retrieve cached analysis if exists"""
+    cached = await redis.get(key)
+    return json.loads(cached) if cached else None
 
 
 @app.route("/api/analyze", methods=["POST"])
@@ -202,6 +233,18 @@ def analyze_endpoint():
         user_id = data.get("user_id")
         chat_id = data.get("chat_id")
         limit = data.get("limit", 100)
+        force_refresh = data.get("force_refresh", False)
+
+        cache_key = f"tganalysis:{user_id}:{chat_id}"
+
+        if not force_refresh:
+            cached = await get_cached_analysis(cache_key)
+            if cached:
+                return jsonify({
+                    **cached,
+                    "is_cached": True,
+                    "cached_at": cached.get("cached_at")
+                })
 
         if not user_id or not chat_id:
             return jsonify({"error": "Missing user_id or chat_id"}), 400

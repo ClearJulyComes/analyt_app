@@ -291,3 +291,65 @@ h1 {
   border: none;
   cursor: pointer;
 }
+
+.cached-badge {
+    background: #f0f9ff;
+    color: #0369a1;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-bottom: 15px;
+    display: inline-block;
+    border: 1px solid #e0f2fe;
+}
+
+#update-report-btn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.chat-preview {
+    font-size: 12px;
+    margin-top: 5px;
+    color: var(--tg-theme-hint-color);
+}
+
+.cached-preview {
+    padding: 5px;
+    border-radius: 5px;
+    background: var(--tg-theme-secondary-bg-color);
+}
+
+.mini-sentiment {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 3px;
+}
+
+.sentiment-tag {
+    background: var(--tg-theme-bg-color);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.preview-loader {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--tg-theme-secondary-bg-color);
+    border-top-color: var(--tg-theme-button-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

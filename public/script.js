@@ -75,6 +75,28 @@ class AuthHelper {
     }
   }
 
+  static async loadCachedAnalysis(chatId) {
+    try {
+      const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
+      if (!userId) return null;
+
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          chat_id: parseInt(chatId),
+          force_refresh: false
+        })
+      });
+      
+      return await response.json();
+    } catch (error) {
+      console.error("Cache load failed:", error);
+      return null;
+    }
+  }
+
   static showPhoneInput() {
     console.log("Showing phone input form");
     const container = document.getElementById("auth-container");
@@ -242,6 +264,9 @@ async function promptForChatId() {
           <li class="chat-item" data-chat-id="${chat.chat_id}">
             <img src="${chat.avatar}" class="chat-avatar" alt="avatar" />
             <span class="chat-name">${chat.name}</span>
+            <div class="chat-preview" id="preview-${chat.chat_id}">
+              <div class="preview-loader"></div>
+            </div>
           </li>
         `).join('')}
       </ul>
@@ -249,11 +274,41 @@ async function promptForChatId() {
   `;
   modal.style.display = 'block';
 
+  chats.forEach(async chat => {
+    const previewEl = document.getElementById(`preview-${chat.chat_id}`);
+    try {
+      const cached = await AuthHelper.loadCachedAnalysis(chat.chat_id);
+      if (cached && !cached.error) {
+        previewEl.innerHTML = `
+          <div class="cached-preview">
+            <span>Last analyzed: ${new Date(cached.cached_at).toLocaleDateString()}</span>
+            <div class="mini-sentiment">
+              ${Object.entries(cached.sentiment_summary)
+                .map(([user, sentiment]) => 
+                  `<span class="sentiment-tag">${user}: ${sentiment}</span>`
+                ).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        previewEl.innerHTML = '<div class="no-cache">No cached analysis</div>';
+      }
+    } catch (error) {
+      previewEl.innerHTML = '';
+    }
+  });
+
   return new Promise(resolve => {
     modal.querySelectorAll('.chat-item').forEach(item => {
       item.addEventListener('click', () => {
         const chatId = item.getAttribute('data-chat-id');
         modal.style.display = 'none';
+
+        const cached = await AuthHelper.loadCachedAnalysis(chatId);
+        if (cached && !cached.error) {
+          displayResults(cached);
+        }
+        
         resolve(chatId);
       });
     });
@@ -274,8 +329,21 @@ function displayResults(data) {
             .join('');
     };
 
+    const cachedBadge = data.is_cached ? `
+        <div class="cached-badge">
+            ⏱️ Cached report (${new Date(data.cached_at).toLocaleString()})
+        </div>
+    ` : '';
+
+    const updateButton = `
+        <button id="update-report-btn" class="tg-button">
+            🔄 Update Report
+        </button>
+    `;
+
     result.innerHTML = `
         <div class="analysis-card">
+            ${cachedBadge}
             <h3>Chat Analysis</h3>
 
             <div class="metric">
@@ -304,10 +372,46 @@ function displayResults(data) {
                 <span class="metric-title">Total analyzed:</span>
                 <span class="metric-value">${data.total_messages} messages</span>
             </div>
+            ${updateButton}
         </div>
     `;
+
+    document.getElementById('update-report-btn')?.addEventListener('click', async () => {
+        await updateAnalysis(data.chat_id); // Pass the original chat ID
+    });
 }
 
+async function updateAnalysis(chatId) {
+  const loading = document.getElementById('loading');
+  const result = document.getElementById('result');
+  
+  try {
+      loading.style.display = 'block';
+      result.innerHTML = '<div class="loading-text">Updating analysis...</div>';
+
+      const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              user_id: Telegram.WebApp.initDataUnsafe.user?.id,
+              chat_id: parseInt(chatId),
+              limit: 300,
+              force_refresh: true
+          })
+      });
+
+      if (!response.ok) throw new Error(await response.text());
+      const newAnalysis = await response.json();
+      
+      displayResults(newAnalysis);
+      
+  } catch (error) {
+      console.error("Update failed:", error);
+      Telegram.WebApp.showAlert(`Update failed: ${error.message}`);
+  } finally {
+      loading.style.display = 'none';
+  }
+}
 
 // Update event listener with debug
 document.getElementById('analyze-btn').addEventListener('click', () => {

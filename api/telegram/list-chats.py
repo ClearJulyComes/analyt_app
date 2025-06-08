@@ -48,7 +48,7 @@ async def get_user_session(user_id):
             if not await client.is_user_authorized():
                 return jsonify({"error": "Unauthorized"}), 401
 
-            dialogs = await client.get_dialogs(limit=20)
+            dialogs = await client.get_dialogs(limit=30)
             user_entities = [
                 dialog.entity for dialog in dialogs
                 if isinstance(dialog.entity, User)
