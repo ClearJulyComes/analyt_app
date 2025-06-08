@@ -302,11 +302,12 @@ window.submitCode = async function(userId, phone) {
 
 window.submitPassword = async function(phone, code) {
   const password = document.getElementById("password-input").value;
+  const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
 
   const res = await fetch("/api/verify-code", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone, code, password })
+    body: JSON.stringify({ userId, phone, code, password })
   });
 
   const data = await res.json();
