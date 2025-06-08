@@ -247,15 +247,7 @@ async function analyzeRealChat() {
         loading.style.display = 'block';
         result.innerHTML = '';
 
-        const chatId = await promptForChatId();
-        if (!chatId) {
-          return;
-        }
-        
-        const analysis = await fetchAnalysis(chatId);
-        
-        displayResults(chatId, analysis);
-        
+        await promptForChatId();
     } catch (error) {
         console.error("[ERROR]", error);
         result.innerHTML = `
@@ -348,9 +340,10 @@ async function promptForChatId() {
           const cached = await getCachedAnalysis(chatId);
           if (cached && !cached.error) {
             displayResults(chatId, cached);
+          } else {
+            const analysis = await fetchAnalysis(chatId);
+            displayResults(chatId, analysis);
           }
-
-          resolve(chatId);
         })();
       }); 
     });

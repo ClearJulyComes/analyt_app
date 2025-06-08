@@ -48,7 +48,7 @@ async def get_sentiments_summary(user_blocks):
         "   - Possible personality traits\n"
         "6. Interaction dynamics between them\n\n"
         "7. Return only strict JSON (double-quoted keys and values). The `explanation` must be a single string with clear sections per user and second user info should be from new line, like: \"User A: ... \nUser B: ...\". Like this:\n"
-        "{\"users\": [ {\"user_name\": \"label - score%\"}, ... ], \"explanation\": \"...\"}\n\n"
+        "{\"users\": [ {\"user_name1\": \"label - score%\"}, {\"user_name2\": \"label - score%\"} ], \"explanation\": \"...\"}\n\n"
         "Messages in chronological order:\n\n" + "\n\n".join(user_blocks)
     )
 
