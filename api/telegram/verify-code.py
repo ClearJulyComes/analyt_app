@@ -27,9 +27,6 @@ async def create_session(phone, code, phone_code_hash, password):
         if session_str:
             session_str = base64.urlsafe_b64decode(session_str).decode()
 
-        logger.info("Session redis: %s", session_str)
-        # Ensure string format (decode if bytes)
-
         client = TelegramClient(StringSession(session_str), api_id, api_hash)
         await client.connect()
         await client.sign_in(phone=phone, code=code, phone_code_hash=phone_code_hash)
@@ -50,6 +47,7 @@ async def create_session(phone, code, phone_code_hash, password):
 def verify_code():
     try:
         data = request.get_json()
+        user_id = data.get("userId")
         phone = data.get("phone")
         code = data.get("code")
         password = data.get("password", None)
@@ -58,7 +56,7 @@ def verify_code():
             return jsonify({"error": "Missing phone or code"}), 400
 
         # Retrieve code hash
-        phone_code_hash = asyncio.run(redis.get(f"tg:code_hash:{phone}"))
+        phone_code_hash = asyncio.run(redis.get(f"tg:code_hash:{user_id}"))
         logger.info("Old code hash: %s", phone_code_hash)
 
         if not phone_code_hash:

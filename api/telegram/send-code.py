@@ -36,16 +36,8 @@ async def create_session(user_id, phone):
         encoded = base64.urlsafe_b64encode(session_str.encode()).decode()
 
         await redis.set(f"tg:session_temp:{phone}", encoded, ex=300)  # 5 minutes
-        stored = await redis.get(f"tg:session_temp:{phone}")
 
-        if stored:
-            stored = base64.urlsafe_b64decode(stored).decode()
-
-        logger.info("Saved session: %s", session_str)
-        logger.info("Redis readback: %s", stored)
-        logger.info("Match? %s", session_str == stored)
-
-        await redis.set(f"tg:code_hash:{phone}", sent.phone_code_hash, ex=300)
+        await redis.set(f"tg:code_hash:{user_id}", sent.phone_code_hash, ex=300)
         await redis.set(f"tg:phone:{user_id}", phone, ex=300)
     except PhoneNumberInvalidError:
         raise Exception("❌ Invalid phone number")
@@ -79,21 +71,23 @@ def send_code():
 def check_code_status():
     try:
         # Get parameters from query string
-        phone = request.args.get("phone")
+        user_id = request.args.get("userId")
         
-        if not phone:
-            return jsonify({"error": "Missing phone parameter"}), 400
+        if not user_id:
+            return jsonify({"error": "Missing user_id parameter"}), 400
         
-        # Check if code is valid (implementation depends on your logic)
-        code_hash = redis.get(f"tg:code_hash:{phone}")
+        code_hash = redis.get(f"tg:code_hash:{user_id}")
         if not code_hash:
             logger.info("No code")
             return jsonify({"status": False, "message": "No verification request found for this phone"})
+
+        phone = redis.get(f"tg:phone:{user_id}")
         
         logger.info("Verify code: %s", code_hash)
         return jsonify({
             "status": True,
-            "message": "Code hash persist"
+            "message": "Code hash persist",
+            "phone": phone
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

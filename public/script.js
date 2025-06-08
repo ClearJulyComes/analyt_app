@@ -33,7 +33,7 @@ class AuthHelper {
 
       if (statusData.status) {
         console.log("Code verification in progress");
-        this.showCodeInput(statusData.phone);
+        this.showCodeInput(userId, statusData.phone);
       } else {
         console.log("No active session, showing phone input");
         this.showPhoneInput();
@@ -146,7 +146,7 @@ class AuthHelper {
     container.style.display = "block";
   }
 
-  static showCodeInput(phone) {
+  static showCodeInput(userId, phone) {
     console.log("Showing code input form for phone:", phone);
     const container = document.getElementById("auth-container");
     container.innerHTML = `
@@ -154,7 +154,7 @@ class AuthHelper {
         <p>📨 Code sent to <strong>${phone}</strong></p>
         <label>💬 Enter the code:</label>
         <input type="text" id="code-input" placeholder="12345" />
-        <button onclick="submitCode('${phone}')">Verify</button>
+        <button onclick="submitCode('${userId}', '${phone}')">Verify</button>
       </div>
     `;
     container.style.display = "block";
@@ -194,14 +194,14 @@ window.submitPhone = async function() {
   }
 };
 
-window.submitCode = async function(phone) {
+window.submitCode = async function(userId, phone) {
   const code = document.getElementById("code-input").value;
 
   try {
     const res = await fetch("/api/verify-code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, code })
+      body: JSON.stringify({ userId, phone, code })
     });
 
     const data = await res.json();
@@ -254,7 +254,7 @@ async function analyzeRealChat() {
         
         const analysis = await fetchAnalysis(chatId);
         
-        displayResults(analysis);
+        displayResults(chatId, analysis);
         
     } catch (error) {
         console.error("[ERROR]", error);
@@ -347,7 +347,7 @@ async function promptForChatId() {
 
           const cached = await getCachedAnalysis(chatId);
           if (cached && !cached.error) {
-            displayResults(cached);
+            displayResults(chatId, cached);
           }
 
           resolve(chatId);
@@ -364,7 +364,7 @@ async function promptForChatId() {
 
 
 
-function displayResults(data) {
+function displayResults(chatId, data) {
   const result = document.getElementById('result');
   const loading = document.getElementById('loading');
   if (!result) return;
@@ -423,7 +423,7 @@ function displayResults(data) {
   `;
 
   document.getElementById('update-report-btn')?.addEventListener('click', async () => {
-      await updateAnalysis(data.chat_id);
+      await updateAnalysis(chatId);
   });
 }
 
@@ -449,7 +449,7 @@ async function updateAnalysis(chatId) {
       if (!response.ok) throw new Error(await response.text());
       const newAnalysis = await response.json();
       
-      displayResults(newAnalysis);
+      displayResults(chatId, newAnalysis);
       
   } catch (error) {
       console.error("Update failed:", error);

@@ -47,7 +47,7 @@ async def get_sentiments_summary(user_blocks):
         "4. Interaction dynamics between them\n\n"
         "5. If the majority of the messages are in a language other than English (e.g. Russian), explanation in your response — MUST be in that same language.\n"
         "6. Return only strict JSON (double-quoted keys and values). The `explanation` must be a single string with clear sections per user and second user info should be from new line, like: \"[User A]: ... \n[User B]: ...\". Like this:\n"
-        "{\"users\": [ {\"user1\": \"label - score%\"}, ... ], \"explanation\": \"...\"}\n\n"
+        "{\"users\": [ {\"user name\": \"label - score%\"}, ... ], \"explanation\": \"...\"}\n\n"
         "Messages in chronological order:\n\n" + "\n\n".join(user_blocks)
     )
 
