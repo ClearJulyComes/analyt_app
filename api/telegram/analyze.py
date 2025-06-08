@@ -4,6 +4,8 @@ import base64
 import json
 import re
 import asyncio
+import datetime
+import httpx
 from flask import Flask, request, jsonify
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -11,7 +13,6 @@ from telethon import TelegramClient
 from telethon.sessions import StringSession
 from telethon.tl.types import User, Chat, Channel
 from upstash_redis.asyncio import Redis
-import httpx
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -198,7 +199,8 @@ async def analyze_messages(user_id, chat_id, limit=100):
             'sentiment_summary': sentiment_summary,
             'sentiment_explanation': explanation,
             'total_messages': len(messages),
-            'last_message_id': messages[-1]['id'] if messages else None
+            'last_message_id': messages[-1]['id'] if messages else None,
+            'cached_at': datetime.datetime.now()
         }
 
         cache_key = generate_cache_key(user_id, chat_id)
@@ -224,7 +226,6 @@ async def get_cached_analysis(key: str) -> dict:
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze_endpoint():
-    logger.info("analyze started")
     try:
         data = request.get_json()
         user_id = data.get("user_id")
@@ -235,6 +236,7 @@ def analyze_endpoint():
         cache_key = f"tganalysis:{user_id}:{chat_id}"
 
         if not force_refresh:
+            logger.info("Get cashed analyze for: %s", chat_id)
             cached = asyncio.run(get_cached_analysis(cache_key))
             if cached:
                 return jsonify({
@@ -242,6 +244,8 @@ def analyze_endpoint():
                     "is_cached": True,
                     "cached_at": cached.get("cached_at")
                 })
+            else:
+                return {}
 
         if not user_id or not chat_id:
             return jsonify({"error": "Missing user_id or chat_id"}), 400

@@ -257,10 +257,12 @@ async function promptForChatId() {
       <ul class="chat-list">
         ${chats.map(chat => `
           <li class="chat-item" data-chat-id="${chat.chat_id}">
-            <img src="${chat.avatar}" class="chat-avatar" alt="avatar" />
-            <span class="chat-name">${chat.name}</span>
-            <div class="chat-preview" id="preview-${chat.chat_id}">
-              <div class="preview-loader"></div>
+            <img src="${chat.avatar}" class="chat-avatar" alt="avatar" onerror="this.src='https://placehold.co/40?text=TG'"/>
+            <div class="chat-meta">
+              <div class="chat-name">${chat.name}</div>
+              <div class="chat-preview" id="preview-${chat.chat_id}">
+                <div class="preview-loader"></div>
+              </div>
             </div>
           </li>
         `).join('')}
@@ -275,7 +277,10 @@ async function promptForChatId() {
       const cached = await AuthHelper.loadCachedAnalysis(chat.chat_id);
       previewEl.innerHTML = cached && !cached.error ? `
         <div class="cached-preview">
-          <span>Last analyzed: ${new Date(cached.cached_at).toLocaleDateString()}</span>
+          <div class="cached-preview-header">
+            <span>Last Analysis</span>
+            <span class="cached-preview-date">${new Date(cached.cached_at).toLocaleDateString()}</span>
+          </div>
           <div class="mini-sentiment">
             ${Object.entries(cached.sentiment_summary || {})
               .map(([user, sentiment]) => 
@@ -283,7 +288,7 @@ async function promptForChatId() {
               ).join('')}
           </div>
         </div>
-      ` : '<div class="no-cache">No cached analysis</div>';
+      ` : '<div class="no-cache">No previous analysis</div>';
     } catch (error) {
       previewEl.innerHTML = '<div class="no-cache">Error loading</div>';
     }
