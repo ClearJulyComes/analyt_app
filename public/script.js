@@ -441,7 +441,7 @@ async function updateAnalysis(chatId) {
           body: JSON.stringify({
               user_id: Telegram.WebApp.initDataUnsafe.user?.id,
               chat_id: parseInt(chatId),
-              limit: 300,
+              limit: 600,
               force_refresh: true
           })
       });
