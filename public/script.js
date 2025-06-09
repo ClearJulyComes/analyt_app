@@ -139,35 +139,10 @@ class AuthHelper {
     console.log("Showing phone input form");
     const container = document.getElementById("auth-container");
     container.innerHTML = `
-      <div class="auth-card">
-        <div class="auth-header">
-          <h2>Sign In</h2>
-          <p class="auth-subtitle">Enter your phone number to continue</p>
-        </div>
-        
-        <div class="auth-content">
-          <div class="input-group">
-            <label for="phone-input" class="input-label">Phone Number</label>
-            <div class="input-container">
-              <input 
-                type="tel" 
-                id="phone-input" 
-                class="input-field"
-                placeholder="+1 (123) 456-7890"
-                pattern="^\+[0-9]{1,15}$"
-                inputmode="tel"
-              >
-              <div class="input-border"></div>
-            </div>
-            <p class="input-hint">Include country code</p>
-          </div>
-          
-          <button class="auth-button" onclick="submitPhone()">
-            <span class="button-text">Continue</span>
-            <span class="button-icon">→</span>
-          </button>
-        </div>
-        
+      <div class="auth-form">More actions
+        <label>📱 Enter your phone number:</label>
+        <input type="text" id="phone-input" placeholder="+1234567890" />
+        <button onclick="submitPhone()">Send Code</button>
         <div class="auth-footer">
           <p class="legal-text">
             By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>
@@ -182,35 +157,11 @@ class AuthHelper {
     console.log("Showing code input form for phone:", phone);
     const container = document.getElementById("auth-container");
     container.innerHTML = `
-      <div class="auth-card">
-        <div class="auth-header">
-          <h2>Verify Phone</h2>
-          <p class="auth-subtitle">Enter the code sent to <strong class="phone-number">${phone}</strong></p>
-        </div>
-        
-        <div class="auth-content">
-          <div class="input-group">
-            <label for="code-input" class="input-label">Verification Code</label>
-            <div class="input-container">
-              <input 
-                type="text" 
-                id="code-input" 
-                class="input-field"
-                placeholder="123456"
-                inputmode="numeric"
-                pattern="[0-9]{6}"
-                maxlength="6"
-              >
-              <div class="input-border"></div>
-            </div>
-            <p class="input-hint">Check your Telegram messages</p>
-          </div>
-          
-          <button class="auth-button" onclick="submitCode('${userId}', '${phone}')">
-            <span class="button-text">Verify</span>
-            <span class="button-icon">→</span>
-          </button>
-        </div>
+      <div class="auth-form">More actions
+        <p>📨 Code sent to <strong>${phone}</strong></p>
+        <label>💬 Enter the code:</label>
+        <input type="text" id="code-input" placeholder="12345" />
+        <button onclick="submitCode('${userId}', '${phone}')">Verify</button>
       </div>
     `;
     container.style.display = "block";
@@ -219,33 +170,9 @@ class AuthHelper {
   static showPasswordInput(phone, code) {
     const container = document.getElementById("auth-container");
     container.innerHTML = `
-      <div class="auth-card">
-        <div class="auth-header">
-          <h2>Two-Factor Authentication</h2>
-          <p class="auth-subtitle">Enter your 2FA password to continue</p>
-        </div>
-        
-        <div class="auth-content">
-          <div class="input-group">
-            <label for="password-input" class="input-label">Password</label>
-            <div class="input-container">
-              <input 
-                type="password" 
-                id="password-input" 
-                class="input-field"
-                placeholder="••••••••"
-              >
-              <div class="input-border"></div>
-            </div>
-            <p class="input-hint">Your account's two-factor password</p>
-          </div>
-          
-          <button class="auth-button" onclick="submitPassword('${phone}', '${code}')">
-            <span class="button-text">Continue</span>
-            <span class="button-icon">→</span>
-          </button>
-        </div>
-      </div>
+      <label>🔒 Enter your 2FA password:</label>More actions
+      <input type="password" id="password-input" />
+      <button onclick="submitPassword('${phone}', '${code}')">Verify</button>
     `;
   }
 }
@@ -363,7 +290,7 @@ async function promptForChatId() {
 
   const modal = document.getElementById("chat-picker");
   modal.innerHTML = `
-    <div class="chat-modal-overlay"></div>
+    <div class="chat-modal-overlay"></div>More actions
     <div class="chat-modal">
       <button class="chat-modal-close">&times;</button>
       <h3 class="chat-modal-title">Select a Chat</h3>
