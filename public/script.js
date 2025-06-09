@@ -139,7 +139,7 @@ class AuthHelper {
     console.log("Showing phone input form");
     const container = document.getElementById("auth-container");
     container.innerHTML = `
-      <div class="auth-form">More actions
+      <div class="auth-form">
         <label>📱 Enter your phone number:</label>
         <input type="text" id="phone-input" placeholder="+1234567890" />
         <button onclick="submitPhone()">Send Code</button>
@@ -157,7 +157,7 @@ class AuthHelper {
     console.log("Showing code input form for phone:", phone);
     const container = document.getElementById("auth-container");
     container.innerHTML = `
-      <div class="auth-form">More actions
+      <div class="auth-form">
         <p>📨 Code sent to <strong>${phone}</strong></p>
         <label>💬 Enter the code:</label>
         <input type="text" id="code-input" placeholder="12345" />
@@ -170,7 +170,7 @@ class AuthHelper {
   static showPasswordInput(phone, code) {
     const container = document.getElementById("auth-container");
     container.innerHTML = `
-      <label>🔒 Enter your 2FA password:</label>More actions
+      <label>🔒 Enter your 2FA password:</label>
       <input type="password" id="password-input" />
       <button onclick="submitPassword('${phone}', '${code}')">Verify</button>
     `;
@@ -276,7 +276,7 @@ async function fetchAnalysis(chatId) {
         body: JSON.stringify({
             user_id: Telegram.WebApp.initDataUnsafe.user?.id,
             chat_id: parseInt(chatId),
-            limit: 300,
+            limit: 600,
             force_refresh: true
         })
     });
@@ -290,7 +290,7 @@ async function promptForChatId() {
 
   const modal = document.getElementById("chat-picker");
   modal.innerHTML = `
-    <div class="chat-modal-overlay"></div>More actions
+    <div class="chat-modal-overlay"></div>
     <div class="chat-modal">
       <button class="chat-modal-close">&times;</button>
       <h3 class="chat-modal-title">Select a Chat</h3>
