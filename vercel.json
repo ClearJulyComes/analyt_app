@@ -13,11 +13,7 @@
       }
     }
   ],
-  "functions": {
-    "api/telegram/*.py": {
-      "regions": ["cdg1"]
-    }
-  },
+  "regions": ["cdg1"],
   "routes": [
     {
       "src": "/api/analyze",
