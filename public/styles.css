@@ -71,6 +71,11 @@ h1 {
   box-shadow: none;
 }
 
+.button-large {
+  font-size: 20px;
+  padding: 16px 24px;
+}
+
 .auth-form {
   background: white;
   border-radius: var(--border-radius);
