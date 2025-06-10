@@ -66,8 +66,8 @@ def verify_code():
 
         encoded = base64.urlsafe_b64encode(session_str.encode()).decode()
 
-        asyncio.run(redis.set(f"tg:session:{me.id}", encoded, ex=60 * 60 * 24))
-        asyncio.run(redis.set(f"tg:phone:{me.id}", phone, ex=60 * 60 * 24))
+        asyncio.run(redis.set(f"tg:session:{me.id}", encoded, ex=60 * 60 * 24 * 10))
+        asyncio.run(redis.set(f"tg:phone:{me.id}", phone, ex=60 * 60 * 24 * 10))
 
         return jsonify({"ok": True, "userId": me.id})
 
