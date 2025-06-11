@@ -137,6 +137,8 @@ async def analyze_messages(user_id, chat_id, limit=100):
         entity = None
         dialogs = await client.get_dialogs()
         for dialog in dialogs:
+            if getattr(dialog.entity, 'id', None) == 777000:
+                continue
             if str(dialog.entity.id) == str(chat_id):
                 entity = dialog.entity
                 break
