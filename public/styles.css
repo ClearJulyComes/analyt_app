@@ -314,4 +314,51 @@ body.dark {
   --danger: #FF453A;
   --text-dark: #FFFFFF;
   --text-muted: #A1A1A6;
+  background-color: #121212;
+  color: #f0f0f0;
+}
+
+/* Header text (Chat Analyzer) */
+body.dark .header h1,
+body.dark .header .subtitle {
+  color: #f0f0f0;
+}
+
+/* Chat modal */
+body.dark .chat-modal {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+}
+
+/* Chat item */
+body.dark .chat-item {
+  background-color: #2a2a2a;
+  border-bottom: 1px solid #333;
+}
+
+/* Chat name and preview text */
+body.dark .chat-name {
+  color: #ffffff;
+}
+body.dark .chat-preview {
+  color: #bbbbbb;
+}
+
+/* Buttons */
+body.dark .button,
+body.dark .tg-button {
+  background-color: #2d88ff;
+  color: white;
+  border: none;
+}
+
+/* Modal overlay */
+body.dark .chat-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Loading and error text */
+body.dark .loading,
+body.dark .error {
+  color: #cccccc;
 }
