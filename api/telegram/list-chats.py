@@ -51,9 +51,10 @@ async def get_user_session(user_id):
             dialogs = await client.get_dialogs(limit=30)
             user_entities = [
                 dialog.entity for dialog in dialogs
-                if isinstance(dialog.entity, User)
-                and not getattr(dialog.entity, 'bot', False)
-                and not getattr(dialog.entity, 'is_self', False)
+                    if isinstance(dialog.entity, User)
+                        and not getattr(dialog.entity, 'bot', False)
+                        and not getattr(dialog.entity, 'is_self', False)
+                        and dialog.entity.id != 777000
             ]
 
             semaphore = asyncio.Semaphore(10)
