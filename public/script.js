@@ -466,6 +466,41 @@ async function updateAnalysis(chatId) {
   }
 }
 
+document.getElementById('gear-button').addEventListener('click', () => {
+  const menu = document.getElementById('gear-menu');
+  menu.classList.toggle('hidden');
+});
+
+// Optional: Close menu on outside click
+document.addEventListener('click', (e) => {
+  const gear = document.getElementById('gear-container');
+  if (!gear.contains(e.target)) {
+    document.getElementById('gear-menu').classList.add('hidden');
+  }
+});
+
+function logout() {
+  await fetch('/api/delete-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              user_id: Telegram.WebApp.initDataUnsafe.user?.id
+          })
+      });
+  AuthHelper.init()
+}
+
+function clearCache() {
+  await fetch('/api/cached-chats', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              user_id: Telegram.WebApp.initDataUnsafe.user?.id
+          })
+      });
+  alert('Cache cleared!');
+}
+
 document.getElementById('analyze-btn').addEventListener('click', () => {
     console.log("[DEBUG] Analyze button clicked");
     analyzeRealChat().catch(console.error);

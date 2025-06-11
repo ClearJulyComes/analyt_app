@@ -47,3 +47,21 @@ async def get_cached_analysis():
     except Exception as e:
         logger.exception("Get cache failed")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/api/cached-chats", methods=["DELETE"])
+async def delete_cached_analysis():
+    try:
+        data = await request.get_json()
+        user_id = data.get("user_id")
+
+        if not user_id:
+            return jsonify({"error": "Missing user_id"}), 400
+
+        keys = [key async for key in redis.scan_iter(f"tganalysis:{user_id}:*")]
+        if keys:
+            await redis.delete(*keys)
+
+        return jsonify({"deleted_keys": len(keys)})
+    except Exception as e:
+        logger.exception("Delete cache failed")
+        return jsonify({"error": str(e)}), 500

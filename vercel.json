@@ -23,7 +23,7 @@
     {
       "src": "/api/cached-chats",
       "dest": "/api/telegram/cached-chats.py",
-      "methods": ["POST"]
+      "methods": ["POST", "DELETE"]
     },
     {
       "src": "/api/send-code",

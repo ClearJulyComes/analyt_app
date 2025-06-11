@@ -24,6 +24,25 @@ def delete_session():
         return jsonify({"error": "Missing userId"}), 400
 
     try:
+        response = await http_client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
+
+        if response.status_code != 200:
+            raise Exception(f"Failed to fetch user info: {response.status_code} - {response.text}")
+
+        data = response.json()
+        session = data.get("session")
+
+        if not session:
+            raise ValueError("Missing session or phone in response")
+        client = TelegramClient(StringSession(session), TELEGRAM_API_ID, TELEGRAM_API_HASH)
+        await client.connect()
+
+        if not await client.is_user_authorized():
+            # Optional: remove session here via internal request
+            await client.disconnect()
+            raise Exception("Session expired")
+        await client.log_out()
+
         redis.delete(f"tg:session:{user_id}")
         logger.info("Deleted session for userId: %s", user_id)
         return jsonify({"success": True}), 200

@@ -367,3 +367,48 @@ body.dark .error {
   background: #1e1e1e;
   color: #f0f0f0;
 }
+
+#gear-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+#gear-button {
+  font-size: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#gear-menu {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: var(--tg-theme-bg-color, #fff);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  padding: 8px;
+}
+
+#gear-menu button {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  color: var(--tg-theme-text-color, #000);
+}
+
+#gear-menu button:hover {
+  background-color: var(--tg-theme-button-color, #eee);
+}
+
+.hidden {
+  display: none;
+}

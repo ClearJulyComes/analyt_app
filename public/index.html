@@ -11,6 +11,13 @@
     <div id="auth-container"></div>
     <div id="app-content" style="display: none;">
         <div class="container">
+            <div id="gear-container">
+              <button id="gear-button">⚙️</button>
+              <div id="gear-menu" class="hidden">
+                <button onclick="logout()">🔓 Logout</button>
+                <button onclick="clearCache()">🧹 Clear Cache</button>
+              </div>
+            </div>
             <div class="header">
                 <h1>Chat Analyzer</h1>
                 <p class="subtitle">Get insights from your Telegram chats</p>
