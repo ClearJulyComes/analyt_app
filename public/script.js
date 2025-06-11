@@ -466,20 +466,10 @@ async function updateAnalysis(chatId) {
   }
 }
 
-document.getElementById('gear-button').addEventListener('click', () => {
-  const menu = document.getElementById('gear-menu');
-  menu.classList.toggle('hidden');
-});
-
-// Optional: Close menu on outside click
-document.addEventListener('click', (e) => {
-  const gear = document.getElementById('gear-container');
-  if (!gear.contains(e.target)) {
-    document.getElementById('gear-menu').classList.add('hidden');
-  }
-});
-
 async function logout() {
+  const confirmed = confirm("Are you sure you want to logout?");
+    if (!confirmed) return;
+
   await fetch('/api/delete-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -491,6 +481,9 @@ async function logout() {
 }
 
 async function clearCache() {
+  const confirmed = confirm("Are you sure you want to clear the cache?");
+    if (!confirmed) return;
+
   await fetch('/api/cached-chats', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
@@ -501,7 +494,22 @@ async function clearCache() {
   alert('Cache cleared!');
 }
 
-document.getElementById('analyze-btn').addEventListener('click', () => {
-    console.log("[DEBUG] Analyze button clicked");
-    analyzeRealChat().catch(console.error);
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('gear-button').addEventListener('click', () => {
+    const menu = document.getElementById('gear-menu');
+    menu.classList.toggle('hidden');
+  });
+
+  // Optional: Close menu on outside click
+  document.addEventListener('click', (e) => {
+    const gear = document.getElementById('gear-container');
+    if (!gear.contains(e.target)) {
+      document.getElementById('gear-menu').classList.add('hidden');
+    }
+  });
+
+  document.getElementById('analyze-btn').addEventListener('click', () => {
+      console.log("[DEBUG] Analyze button clicked");
+      analyzeRealChat().catch(console.error);
+  });
 });
