@@ -48,7 +48,6 @@ class AuthHelper {
   static showApp() {
     console.log("Showing main application");
     this.loadChats();
-    this.loadCachedAnalysis()
 
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-content").style.display = "block";
@@ -67,6 +66,7 @@ class AuthHelper {
       if (data.chats) {
         window.__cachedChats = data.chats;
         console.log("[DEBUG] Chats preloaded:", data.chats.length);
+        this.loadCachedAnalysis()
       } else {
         console.warn("No chats found for user");
       }

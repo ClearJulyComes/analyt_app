@@ -66,7 +66,7 @@ async def get_sentiments_summary(user_blocks):
 
         "       - Note communication styles (e.g., direct, passive, analytical, emotional).\n"
         "4. Provide the output in a structured format: return only strict JSON (double-quoted keys and values). The `explanation` must be a single string. Like this:\n"
-        "{\"users\": [ {\"user_name1\": \"sentiment info\"}, {\"user_name2\": \"sentiment info\"} ], \"explanation\": \"...\"}\n\n"
+        "{\"users\": [ {\"user_name1\": \"sentiment info as a string\"}, {\"user_name2\": \"sentiment info as a string\"} ], \"explanation\": \"full sructured information from 3.2 - 3.4 as a string\"}\n\n"
         "Messages in chronological order with timestamp:\n\n" + "\n\n".join(user_blocks)
     )
 
@@ -99,6 +99,7 @@ async def get_sentiments_summary(user_blocks):
             content = response.json()["choices"][0]["message"]["content"]
             cleaned = re.sub(r"^```json\s*|\s*```$", "", content.strip(), flags=re.DOTALL)
             parsed = json.loads(cleaned)
+            logger.info("Parsed response: %s", parsed)
 
             sentiment_map = {}
             for entry in parsed.get("users", []):
