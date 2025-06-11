@@ -38,34 +38,33 @@ def format_stats(stats):
 async def get_sentiments_summary(user_blocks):
     prompt = (
         "Analyze this conversation chronologically. For each participant:\n"
-        "1. FIRST detect the primary language of ALL messages (count Russian vs English messages)\n"
-        "2. If >50% messages are Russian, the ENTIRE response (including JSON) MUST BE in Russian\n"
-        "3. Please analyze the following chat log between two people. Focus on these key aspects:\n"
+        "1. Please analyze the following chat log between two people. Focus on these key aspects:\n"
 
-        "   3.1 Sentiment Analysis\n"
+        "   1.1 Sentiment Analysis\n"
 
         "       - What is the overall emotional tone (positive/neutral/negative) of each person?\n"
 
         "       - Are there noticeable shifts in sentiment during the conversation?\n"
 
-        "   3.2 Response Time Analysis\n"
+        "   1.2 Response Time Analysis\n"
 
         "       - Who replies faster on average? (Calculate average response time for each person.)\n"
 
         "       - Are there long delays that might indicate disinterest or distraction?\n"
 
-        "   3.3 Conflict or Agreement Detection\n"
+        "   1.3 Conflict or Agreement Detection\n"
 
         "       - Identify moments of tension or disagreement (e.g., sarcasm, confrontational language).\n"
 
         "       - Highlight instances where they align (e.g., mutual support, shared opinions).\n"
 
-        "   3.4 Psychological Portrait\n"
+        "   1.4 Psychological Portrait\n"
 
         "       - Based on language patterns, infer personality traits (e.g., assertive, empathetic, defensive).\n"
 
         "       - Note communication styles (e.g., direct, passive, analytical, emotional).\n"
-        "4. Provide the output in a structured format: return only strict JSON (double-quoted keys and values). The `explanation` must be a single string. Like this:\n"
+        "2. Detect the primary language of ALL messages and TRANSLATE response to that language\n"
+        "3. Provide the output in a structured format: return only strict JSON (double-quoted keys and values). The `explanation` must be a single string. Like this:\n"
         "{\"users\": [ {\"user_name1\": \"sentiment info as a string\"}, {\"user_name2\": \"sentiment info as a string\"} ], \"explanation\": \"full sructured information from 3.2 - 3.4 as a string\"}\n\n"
         "Messages in chronological order with timestamp:\n\n" + "\n\n".join(user_blocks)
     )
