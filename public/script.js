@@ -479,7 +479,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-function logout() {
+async function logout() {
   await fetch('/api/delete-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -490,7 +490,7 @@ function logout() {
   AuthHelper.init()
 }
 
-function clearCache() {
+async function clearCache() {
   await fetch('/api/cached-chats', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
