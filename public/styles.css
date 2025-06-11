@@ -305,3 +305,13 @@ h1 {
     margin: 20px auto;
   }
 }
+
+body.dark {
+  --system-blue: #0A84FF;
+  --system-gray: #B0B0B0;
+  --system-background: #1C1C1E;
+  --card-background: #2C2C2E;
+  --danger: #FF453A;
+  --text-dark: #FFFFFF;
+  --text-muted: #A1A1A6;
+}

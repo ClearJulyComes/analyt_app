@@ -9,6 +9,9 @@ class AuthHelper {
     
     try {
       Telegram.WebApp.expand();
+
+      const isDarkTheme = Telegram.WebApp.colorScheme === 'dark';
+      document.body.classList.toggle('dark', isDarkTheme);
       
       const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
       
@@ -48,6 +51,8 @@ class AuthHelper {
   static showApp() {
     console.log("Showing main application");
     this.loadChats();
+
+    const locale = Telegram.WebApp.initDataUnsafe.user?.language_code;
 
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-content").style.display = "block";
