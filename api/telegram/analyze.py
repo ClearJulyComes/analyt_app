@@ -40,16 +40,34 @@ async def get_sentiments_summary(user_blocks):
         "Analyze this conversation chronologically. For each participant:\n"
         "1. FIRST detect the primary language of ALL messages (count Russian vs English messages)\n"
         "2. If >50% messages are Russian, the ENTIRE response (including JSON) MUST BE in Russian\n"
-        "3. Track sentiment evolution (0-100% scores over time)\n"
-        "4. Final sentiment label (negative/neutral/positive)\n"
-        "5. Psychological portrait focusing on:\n"
-        "   - Communication style\n"
-        "   - Emotional patterns\n"
-        "   - Possible personality traits\n"
-        "6. Interaction dynamics between them\n\n"
-        "7. Return only strict JSON (double-quoted keys and values). The `explanation` must be a single string with clear sections per user and second user info should be from new line, like: \"name: ... \nname: ...\". Like this:\n"
-        "{\"users\": [ {\"user_name1\": \"label - score%\"}, {\"user_name2\": \"label - score%\"} ], \"explanation\": \"...\"}\n\n"
-        "Messages in chronological order:\n\n" + "\n\n".join(user_blocks)
+        "3. Please analyze the following chat log between two people. Focus on these key aspects:\n"
+
+        "   3.1 Sentiment Analysis\n"
+
+        "       - What is the overall emotional tone (positive/neutral/negative) of each person?\n"
+
+        "       - Are there noticeable shifts in sentiment during the conversation?\n"
+
+        "   3.2 Response Time Analysis\n"
+
+        "       - Who replies faster on average? (Calculate average response time for each person.)\n"
+
+        "       - Are there long delays that might indicate disinterest or distraction?\n"
+
+        "   3.3 Conflict or Agreement Detection\n"
+
+        "       - Identify moments of tension or disagreement (e.g., sarcasm, confrontational language).\n"
+
+        "       - Highlight instances where they align (e.g., mutual support, shared opinions).\n"
+
+        "   3.4 Psychological Portrait\n"
+
+        "       - Based on language patterns, infer personality traits (e.g., assertive, empathetic, defensive).\n"
+
+        "       - Note communication styles (e.g., direct, passive, analytical, emotional).\n"
+        "4. Provide the output in a structured format: return only strict JSON (double-quoted keys and values). The `explanation` must be a single string. Like this:\n"
+        "{\"users\": [ {\"user_name1\": \"sentiment info\"}, {\"user_name2\": \"sentiment info\"} ], \"explanation\": \"...\"}\n\n"
+        "Messages in chronological order with timestamp:\n\n" + "\n\n".join(user_blocks)
     )
 
     headers = {
@@ -159,7 +177,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
         grouped_by_sender = defaultdict(list)
         for msg in messages:
             if msg['text'].strip():
-                grouped_by_sender[msg['sender_id']].append(msg['text'])
+                grouped_by_sender[msg['sender_id']].append({'text': msg['text'], 'date': msg['date']})
 
         async def fetch_sender_name(sender_id):
             try:
@@ -187,7 +205,10 @@ async def analyze_messages(user_id, chat_id, limit=100):
             starter_counts_by_name[sender_name] += count
 
         user_blocks = [
-            f"{sender_id_to_name[sender_id]}:\n" + "\n".join(f"- {text}" for text in texts)
+            f"{sender_id_to_name[sender_id]}:\n" + "\n".join(
+                f"- [{msg['date'].strftime('%Y-%m-%d %H:%M:%S')}] {msg['text']}"
+                for msg in texts
+            )
             for sender_id, texts in grouped_by_sender.items()
         ]
 
