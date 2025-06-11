@@ -46,6 +46,8 @@ async def get_user_session(user_id):
         try:
             await client.connect()
             if not await client.is_user_authorized():
+                await client.disconnect()
+                response = await http_client.post(f"{WEBAPP_URL}/api/delete-session", json={"userId": user_id})
                 return jsonify({"error": "Unauthorized"}), 401
 
             dialogs = await client.get_dialogs(limit=30)

@@ -132,6 +132,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
         if not await client.is_user_authorized():
             # Optional: remove session here via internal request
             await client.disconnect()
+            response = await http_client.post(f"{WEBAPP_URL}/api/delete-session", json={"userId": user_id})
             raise Exception("Session expired")
 
         entity = None
