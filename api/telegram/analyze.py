@@ -182,8 +182,13 @@ async def analyze_messages(user_id, chat_id, limit=100):
         start_id = None
         if cached:
             start_id = cached['last_message_id']
-        entity = await client.get_entity(chat_id)
-        msg_limit = limit
+        entity = None
+        async for dialog in client.iter_dialogs():
+            if dialog.entity.id == int(chat_id):
+                entity = dialog.entity
+                break
+        if entity is None:
+            raise ValueError(f"Chat {chat_id} not found in dialogs")
 
         async for msg in client.iter_messages(entity, limit=limit, min_id=start_id):
             messages.append({
