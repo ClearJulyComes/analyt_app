@@ -174,6 +174,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
             response = await http_client.post(f"{WEBAPP_URL}/api/delete-session", json={"userId": user_id})
             raise Exception("Session expired")
 
+        cache_key = f"tganalysis:{user_id}:{chat_id}"
         cached = await get_cached_analysis(cache_key)
 
         messages = []
