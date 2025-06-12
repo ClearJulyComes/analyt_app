@@ -392,7 +392,8 @@ body.dark .error {
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  padding: 8px;
+  padding: 8px 0;
+  min-width: 160px;
 }
 
 #gear-menu button {

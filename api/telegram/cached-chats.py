@@ -27,7 +27,7 @@ async def get_cached_analysis():
         for chat_id in chat_ids:
             cache_keys.append(f"tganalysis:{user_id}:{chat_id}")
 
-        cached_data = redis.mget(cache_keys) if cache_keys else []
+        cached_data = await redis.mget(cache_keys) if cache_keys else []
 
         results = defaultdict(list)
         for key, data in zip(cache_keys, cached_data):
@@ -57,9 +57,22 @@ async def delete_cached_analysis():
         if not user_id:
             return jsonify({"error": "Missing user_id"}), 400
 
-        keys = [key async for key in redis.scan_iter(f"tganalysis:{user_id}:*")]
-        if keys:
-            await redis.delete(*keys)
+        pattern = f"tganalysis:{user_id}:*"
+        cursor = 0
+        all_keys = []
+
+        while True:
+            response = await redis.scan(cursor=cursor, match=pattern, count=100)
+            cursor = response[0]
+            keys = response[1]
+
+            all_keys.extend(keys)
+
+            if cursor == 0:
+                break
+
+        if all_keys:
+            await redis.delete(*all_keys)
 
         return jsonify({"deleted_keys": len(keys)})
     except Exception as e:
