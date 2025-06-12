@@ -34,8 +34,15 @@ def format_stats(stats):
         return {k: f"{v} (0%)" for k, v in stats.items()}
     return {k: f"{v} ({v / total:.0%})" for k, v in stats.items()}
 
+def parse_cached_stats(cached_dict):
+    result = defaultdict(int)
+    for name, value in cached_dict.items():
+        match = re.match(r"(\d+)", value)
+        if match:
+            result[name] = int(match.group(1))
+    return result
 
-async def get_sentiments_summary(user_blocks):
+async def get_sentiments_summary(user_blocks, cached):
     prompt = (
         "Analyze this conversation chronologically. For each participant:\n"
         "1. Please analyze the following chat log between two people. Focus on these key aspects:\n"
@@ -65,9 +72,43 @@ async def get_sentiments_summary(user_blocks):
         "       - Note communication styles (e.g., direct, passive, analytical, emotional).\n"
         "2. Detect the primary language of ALL messages and TRANSLATE response to that language\n"
         "3. Provide the output in a structured format: return only strict JSON (double-quoted keys and values). The `explanation` must be a single string. Like this:\n"
-        "{\"users\": [ {\"user_name1\": \"sentiment rating(max 100%) as a string\"}, {\"user_name2\": \"sentiment rating(max 100%) as a string\"} ], \"explanation\": \"full sructured information in primary language from 1.1 - 1.4 as a string with every topic from new line\"}\n\n"
+        "{\"users\": [ {\"user_name1\": \"sentiment rating(max 100%) as a string\"}, {\"user_name2\": \"sentiment rating(max 100%) as a string\"} ], \"explanation\": \"full sructured information in a primary language(IMPORTANT!) from 1.1 - 1.4 as a string with every topic from new line\"}\n\n"
         "Messages in chronological order with timestamp:\n\n" + "\n\n".join(user_blocks)
     )
+    if cached:
+        prompt = (
+            "Analyze this conversation chronologically with summary of previous messages. For each participant:\n"
+            "1. Please analyze the following chat log between two people and their previous analysis. Focus on these key aspects and changes from the last analysis:\n"
+
+            "   1.1 Sentiment Analysis\n"
+
+            "       - What is the overall emotional tone (positive/neutral/negative) of each person?\n"
+
+            "       - Are there noticeable shifts in sentiment during the conversation?\n"
+
+            "   1.2 Response Time Analysis\n"
+
+            "       - Who replies faster on average? (Calculate average response time for each person.)\n"
+
+            "       - Are there long delays that might indicate disinterest or distraction?\n"
+
+            "   1.3 Conflict or Agreement Detection\n"
+
+            "       - Identify moments of tension or disagreement (e.g., sarcasm, confrontational language).\n"
+
+            "       - Highlight instances where they align (e.g., mutual support, shared opinions).\n"
+
+            "   1.4 Psychological Portrait\n"
+
+            "       - Based on language patterns, infer personality traits (e.g., assertive, empathetic, defensive).\n"
+
+            "       - Note communication styles (e.g., direct, passive, analytical, emotional).\n"
+            "2. Detect the primary language of ALL messages and TRANSLATE response to that language\n"
+            "3. Provide the output in a structured format: return only strict JSON (double-quoted keys and values). The `explanation` must be a single string. Like this:\n"
+            "{\"users\": [ {\"user_name1\": \"sentiment rating(max 100%) as a string\"}, {\"user_name2\": \"sentiment rating(max 100%) as a string\"} ], \"explanation\": \"full sructured information in a primary language(IMPORTANT!) from 1.1 - 1.4 as a string with every topic from new line\"}\n\n"
+            "Messages in chronological order with timestamp:\n\n" + "\n\n".join(user_blocks) + "\n\n"
+            "This is previous summary:\n\n" + "\n".join(cached['sentiment_explanation'])
+            )
 
     headers = {
         "Authorization": f"Bearer {os.getenv('DEEPSEEK_API_KEY')}",
@@ -129,35 +170,30 @@ async def analyze_messages(user_id, chat_id, limit=100):
         await client.connect()
 
         if not await client.is_user_authorized():
-            # Optional: remove session here via internal request
             await client.disconnect()
             response = await http_client.post(f"{WEBAPP_URL}/api/delete-session", json={"userId": user_id})
             raise Exception("Session expired")
 
-        entity = None
-        dialogs = await client.get_dialogs()
-        for dialog in dialogs:
-            if getattr(dialog.entity, 'id', None) == 777000:
-                continue
-            if str(dialog.entity.id) == str(chat_id):
-                entity = dialog.entity
-                break
-
-        if entity is None:
-            raise ValueError(f"Could not find chat with ID {chat_id} in recent dialogs")
+        cached = await get_cached_analysis(cache_key)
 
         messages = []
 
-        logger.info("messages load started")
+        start_id = None
+        if cached:
+            start_id = cached['last_message_id']
+        entity = await client.get_entity(chat_id)
+        msg_limit = limit
 
-        async for msg in client.iter_messages(entity, limit=limit):
-
+        async for msg in client.iter_messages(entity, limit=limit, min_id=start_id):
             messages.append({
-                'sender_id': msg.sender_id,
+                'id': msg.id,
                 'text': msg.text or "",
-                'date': msg.date,
-                'id': msg.id
+                'sender_id': msg.sender_id,
+                'date': msg.date
             })
+        if len(messages) < 2:
+            return cached
+
         logger.info("messages load finished")
 
         messages.reverse()
@@ -214,8 +250,20 @@ async def analyze_messages(user_id, chat_id, limit=100):
             )
             for sender_id, texts in grouped_by_sender.items()
         ]
+        total_messages = len(messages)
 
-        sentiment_summary, explanation = await get_sentiments_summary(user_blocks)
+        if cached:
+            total_messages += cached['total_messages']
+            cached_msg_counts = parse_cached_stats(cached.get("message_count", {}))
+            cached_starter_counts = parse_cached_stats(cached.get("starter_stats", {}))
+
+            for name, count in cached_msg_counts.items():
+                message_counts_by_name[name] += count
+
+            for name, count in cached_starter_counts.items():
+                starter_counts_by_name[name] += count
+
+        sentiment_summary, explanation = await get_sentiments_summary(user_blocks, cached)
 
         await client.disconnect()
         result = {
@@ -223,7 +271,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
             'starter_stats': format_stats(starter_counts_by_name),
             'sentiment_summary': sentiment_summary,
             'sentiment_explanation': explanation,
-            'total_messages': len(messages),
+            'total_messages': total_messages,
             'last_message_id': messages[-1]['id'] if messages else None,
             'cached_at': datetime.now().isoformat()
         }
