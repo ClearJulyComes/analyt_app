@@ -363,9 +363,15 @@ body.dark .error {
   color: #cccccc;
 }
 
-[data-theme="dark"] .auth-form {
+body.dark .auth-form {
   background: #1e1e1e;
   color: #f0f0f0;
+}
+
+body.dark .auth-form input {
+  background-color: #2a2a2a;
+  color: #f0f0f0;
+  border: 1px solid #444;
 }
 
 #gear-container {

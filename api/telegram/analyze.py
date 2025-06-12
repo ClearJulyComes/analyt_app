@@ -65,7 +65,7 @@ async def get_sentiments_summary(user_blocks):
         "       - Note communication styles (e.g., direct, passive, analytical, emotional).\n"
         "2. Detect the primary language of ALL messages and TRANSLATE response to that language\n"
         "3. Provide the output in a structured format: return only strict JSON (double-quoted keys and values). The `explanation` must be a single string. Like this:\n"
-        "{\"users\": [ {\"user_name1\": \"sentiment info as a string\"}, {\"user_name2\": \"sentiment info as a string\"} ], \"explanation\": \"full sructured information from 3.2 - 3.4 as a string\"}\n\n"
+        "{\"users\": [ {\"user_name1\": \"sentiment rating(max 100%) as a string\"}, {\"user_name2\": \"sentiment rating(max 100%) as a string\"} ], \"explanation\": \"full sructured information in primary language from 1.1 - 1.4 as a string with every topic from new line\"}\n\n"
         "Messages in chronological order with timestamp:\n\n" + "\n\n".join(user_blocks)
     )
 
