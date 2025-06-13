@@ -374,9 +374,12 @@ let translations = {};
 
 async function loadTranslations() {
     try {
-        const res = await fetch('/translations.json'); // Make sure this is served by your server
-        translations = await res.json();
-        console.log("Translations loaded.");
+        const res = fetch('/translations.json')
+      .then(response => response.json()) 
+      .then(data => {
+          translations = data;
+      })
+      .catch(err => console.error(err)); 
     } catch (error) {
         console.error("Error loading translations:", error);
     }
@@ -515,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
   await loadTranslations();
 
   document.querySelector("#main_description").innerText = t('main_description');
-  
+
   document.getElementById('gear-button').addEventListener('click', () => {
     const menu = document.getElementById('gear-menu');
     menu.classList.toggle('hidden');
