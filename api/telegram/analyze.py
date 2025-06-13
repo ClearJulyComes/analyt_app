@@ -197,6 +197,7 @@ async def analyze_messages(user_id, chat_id, limit=100):
                 'sender_id': msg.sender_id,
                 'date': msg.date
             })
+        logger.info("new messages number: %s", len(messages))
         if len(messages) < 2:
             return cached
 
