@@ -370,7 +370,24 @@ async function promptForChatId() {
   });
 }
 
+let translations = {};
 
+async function loadTranslations() {
+    try {
+        const res = await fetch('/translations.json'); // Make sure this is served by your server
+        translations = await res.json();
+        console.log("Translations loaded.");
+    } catch (error) {
+        console.error("Error loading translations:", error);
+    }
+}
+
+function t(key) {
+    const locale = Telegram?.WebApp?.initDataUnsafe?.user?.language_code || 'en';
+    return translations[locale]?.[key] ||
+          translations.en?.[key] ||
+          key;
+}
 
 function displayResults(chatId, data) {
   const result = document.getElementById('result');
@@ -495,6 +512,10 @@ async function clearCache() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  await loadTranslations();
+
+  document.querySelector("#main_description").innerText = t('main_description');
+  
   document.getElementById('gear-button').addEventListener('click', () => {
     const menu = document.getElementById('gear-menu');
     menu.classList.toggle('hidden');
