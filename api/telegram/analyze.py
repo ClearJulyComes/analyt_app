@@ -190,13 +190,22 @@ async def analyze_messages(user_id, chat_id, limit=100):
         if entity is None:
             raise ValueError(f"Chat {chat_id} not found in dialogs")
 
-        async for msg in client.iter_messages(entity, limit=limit, min_id=start_id):
-            messages.append({
-                'id': msg.id,
-                'text': msg.text or "",
-                'sender_id': msg.sender_id,
-                'date': msg.date
-            })
+        if start_id is not None:
+            async for msg in client.iter_messages(entity, limit=limit, min_id=start_id):
+                messages.append({
+                    'id': msg.id,
+                    'text': msg.text or "",
+                    'sender_id': msg.sender_id,
+                    'date': msg.date
+                })
+        else:
+            async for msg in client.iter_messages(entity, limit=limit):
+                messages.append({
+                    'id': msg.id,
+                    'text': msg.text or "",
+                    'sender_id': msg.sender_id,
+                    'date': msg.date
+                })
         logger.info("new messages number: %s", len(messages))
         if len(messages) < 2:
             return cached
