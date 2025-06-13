@@ -374,12 +374,8 @@ let translations = {};
 
 async function loadTranslations() {
     try {
-        const res = fetch('/translations.json')
-      .then(response => response.json()) 
-      .then(data => {
-          translations = data;
-      })
-      .catch(err => console.error(err)); 
+      const res = await fetch('/translations.json'); 
+        translations = await res.json();
     } catch (error) {
         console.error("Error loading translations:", error);
     }
@@ -514,7 +510,7 @@ async function clearCache() {
   alert('Cache cleared!');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   await loadTranslations();
 
   document.querySelector("#main_description").innerText = t('main_description');
