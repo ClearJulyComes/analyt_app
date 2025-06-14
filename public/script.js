@@ -431,12 +431,26 @@ async function promptForChatId() {
       item.addEventListener('click', () => {
         (async () => {
           const chatId = item.getAttribute('data-chat-id');
+          const loading = document.getElementById('loading');
           modal.style.display = 'none';
+          loading.innerHTML = `
+              <div class="loading-container">
+                <div class="loading-text">${t('analyzing_loader')}</div>
+                <div class="loading-spinner"></div>
+              </div>
+              `;
+          loading.style.display = 'block';
 
           const cached = await getCachedAnalysis(chatId);
           if (cached && !cached.error) {
             displayResults(chatId, cached);
           } else {
+            loading.innerHTML = `
+              <div class="loading-container">
+                <div class="loading-text">${t('analyzing_loader')}</div>
+                <div class="loading-spinner"></div>
+              </div>
+              `;
             const analysis = await fetchAnalysis(chatId);
             displayResults(chatId, analysis);
           }
@@ -556,6 +570,7 @@ async function updateAnalysis(chatId) {
         <div class="loading-spinner"></div>
       </div>
       `;
+      loading.style.display = 'block';
 
       const response = await fetch('/api/analyze', {
           method: 'POST',
