@@ -43,6 +43,7 @@ async def delete_session():
             raise ValueError("Missing session or phone in response")
         client = TelegramClient(StringSession(session), TELEGRAM_API_ID, TELEGRAM_API_HASH)
         await client.connect()
+        redis.delete(f"tg:session:{user_id}")
 
         if not await client.is_user_authorized():
             # Optional: remove session here via internal request
@@ -50,7 +51,6 @@ async def delete_session():
             raise Exception("Session expired")
         await client.log_out()
 
-        redis.delete(f"tg:session:{user_id}")
         logger.info("Deleted session for userId: %s", user_id)
         return jsonify({"success": True}), 200
     except Exception as e:
