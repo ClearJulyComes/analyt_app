@@ -1,5 +1,7 @@
 from quart import Quart, request, jsonify
 from upstash_redis import Redis
+from telethon import TelegramClient
+from telethon.sessions import StringSession
 import os
 import logging
 import httpx
