@@ -458,11 +458,13 @@ body.dark .auth-form input {
 }
 
 .close-term {
-  position: absolute;
-  right: 20px;
-  top: 20px;
+  position: fixed; /* Changed from absolute to fixed */
+  right: calc(50% - 250px + 20px); /* Adjust based on modal width */
+  top: calc(50% - 40vh + 20px); /* Adjust based on modal height */
   font-size: 24px;
   cursor: pointer;
+  z-index: 10003; /* Higher than modal-content-term */
+  color: var(--tg-theme-text-color, #000000);
 }
 
 body.dark .modal-content-term {
