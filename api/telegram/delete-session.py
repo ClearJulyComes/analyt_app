@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from quart import Quart, request, jsonify
 from upstash_redis import Redis
 import os
 import logging
@@ -7,7 +7,7 @@ import base64  # optional, in case decoding is reused elsewhere
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+app = Quart(__name__)
 
 # Initialize Redis client
 redis = Redis(
@@ -16,8 +16,8 @@ redis = Redis(
 )
 
 @app.route('/api/delete-session', methods=['POST'])
-def delete_session():
-    data = request.get_json()
+async def delete_session():
+    data = await request.get_json()
     user_id = data.get("userId") if data else None
 
     if not user_id:
