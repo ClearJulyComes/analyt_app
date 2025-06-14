@@ -147,11 +147,11 @@ class AuthHelper {
     container.innerHTML = `
       <div class="auth-form">
         <label>${t('enter_phone')}</label>
-        <input type="text" id="phone-input" placeholder="+1234567890" />
+        <input type="text" id="phone-input" placeholder="+1234567890" value="+7" />
         <button class="button" onclick="submitPhone()">${t('send_code')}</button>
         <div class="auth-footer">
           <p class="legal-text">
-            ${t('agree_description')} <a href="#">${t('terms')}</a> & <a href="#">${t('privacy')}</a>
+            ${t('agree_description')} <span id="terms-span">${t('terms')}</span> & <span id="privacy-span">${t('privacy')}</span>
           </p>
         </div>
       </div>
@@ -538,10 +538,47 @@ async function clearCache() {
   alert(t('cache_cleared'));
 }
 
+async function getTerm(locale, type) {
+  if (type == 'terms') {
+    let response = await fetch(`/terms_${locale}.html`);
+  } else {
+    let response = await fetch(`/privacy_${locale}.html`);
+  }
+  return response;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   await loadTranslations();
 
   setText();
+
+  const user = Telegram?.WebApp?.initDataUnsafe?.user;
+  const locale = user?.language_code || 'en';
+  if (locale != 'ru') {
+      locale = 'en';
+    }
+
+  document.getElementById('terms-span').addEventListener('click', () => {
+    document.getElementById('modal-text-term').innerHTML = getTerm(locale, "terms");
+    document.getElementById('modal-term').style.display = 'block';
+  });
+
+  document.getElementById('privacy-span').addEventListener('click', () => {
+    document.getElementById('modal-text-term').innerHTML = getTerm(locale, "privacy");
+    document.getElementById('modal-term').style.display = 'block';
+  });
+
+  // To close modal
+  document.getElementById('modal-close-term').addEventListener('click', () => {
+    document.getElementById('modal-term').style.display = 'none';
+  });
+
+  // Also close if clicking outside modal
+  window.onclick = (event) => {
+    if (event.target == document.getElementById('modal-term')) {
+      document.getElementById('modal-term').style.display = 'none';
+    }
+  };
 
   document.getElementById('gear-button').addEventListener('click', () => {
     const menu = document.getElementById('gear-menu');
