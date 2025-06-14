@@ -76,7 +76,7 @@ class AuthHelper {
         console.warn("No chats found for user");
       }
     } catch (error) {
-      AuthHelper.init()
+      AuthHelper.init();
       console.error("Failed to preload chats:", error);
     }
   }
