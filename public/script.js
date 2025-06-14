@@ -76,6 +76,7 @@ class AuthHelper {
         console.warn("No chats found for user");
       }
     } catch (error) {
+      AuthHelper.init()
       console.error("Failed to preload chats:", error);
     }
   }
@@ -293,7 +294,22 @@ async function fetchAnalysis(chatId) {
 
 async function promptForChatId() {
   const cachedChats = window.__cachedChats;
-  const chats = cachedChats || (await (await fetch(`/api/list-chats?userId=${Telegram.WebApp.initDataUnsafe.user?.id}`)).json()).chats;
+  let chats;
+  if (cachedChats) {
+    chats = cachedChats;
+  } else {
+    try {
+      const res = await fetch(`/api/list-chats?userId=${Telegram?.WebApp?.initDataUnsafe?.user?.id}`);
+
+      if (!res.ok) {
+        console.error('Error fetching chats. Server responded with a non-200 code.');
+
+        AuthHelper.init()
+      } else {
+        const data = await res.json();
+        chats = data.chats;
+      }
+  }
 
   const modal = document.getElementById("chat-picker");
   modal.innerHTML = `

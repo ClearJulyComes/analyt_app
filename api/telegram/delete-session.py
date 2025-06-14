@@ -45,11 +45,10 @@ async def delete_session():
         await client.connect()
         redis.delete(f"tg:session:{user_id}")
 
-        if not await client.is_user_authorized():
-            # Optional: remove session here via internal request
-            await client.disconnect()
-            raise Exception("Session expired")
-        await client.log_out()
+        if await client.is_user_authorized():
+            await client.log_out()
+            logger.info("Session expired")
+        await client.disconnect()
 
         logger.info("Deleted session for userId: %s", user_id)
         return jsonify({"success": True}), 200
