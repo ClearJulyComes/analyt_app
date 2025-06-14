@@ -420,7 +420,7 @@ body.dark .auth-form input {
   display: none !important;
 }
 
-.modal-term {
+#modal-term {
   display: none;
   position: fixed;
   left: 0;
