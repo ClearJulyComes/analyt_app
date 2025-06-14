@@ -151,7 +151,7 @@ class AuthHelper {
         <button class="button" onclick="submitPhone()">${t('send_code')}</button>
         <div class="auth-footer">
           <p class="legal-text">
-            ${t('agree_description')} <a href="#"id="terms-span">${t('terms')}</a> & <a href="#" id="privacy-span">${t('privacy')}</a>
+            ${t('agree_description')} <a href="#"id="terms-a">${t('terms')}</a> & <a href="#" id="privacy-a">${t('privacy')}</a>
           </p>
         </div>
       </div>
