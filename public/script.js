@@ -514,6 +514,7 @@ function displayResults(chatId, data) {
     </button>
   `;
   loading.style.display = 'none';
+  result.style.display = 'block';
 
   result.innerHTML = `
       <div class="analysis-card">
