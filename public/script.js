@@ -239,6 +239,9 @@ async function getTerm(locale, type) {
   } else {
     response = await fetch(`/privacy_${locale}.html`);
   }
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
   alert(`get response`)
   return await response.text()
 }
