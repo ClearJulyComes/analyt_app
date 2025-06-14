@@ -304,11 +304,12 @@ async function promptForChatId() {
       if (!res.ok) {
         console.error('Error fetching chats. Server responded with a non-200 code.');
 
-        AuthHelper.init()
+        return AuthHelper.init();
       } else {
         const data = await res.json();
         chats = data.chats;
       }
+    }
   }
 
   const modal = document.getElementById("chat-picker");
