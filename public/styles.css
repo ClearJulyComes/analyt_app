@@ -447,3 +447,20 @@ body.dark .auth-form input {
   font-size: 24px;
   cursor: pointer;
 }
+
+body.dark .modal-content-term {
+  background-color: var(--tg-theme-bg-color, #1e1e1e);
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+body.dark .close-term {
+  color: var(--tg-theme-text-color, #ffffff);
+}
+
+@media (max-width: 768px) {
+  .modal-content-term {
+    width: 95%;
+    margin: 10% auto;
+    padding: 15px;
+  }
+}
