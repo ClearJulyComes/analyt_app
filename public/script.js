@@ -165,44 +165,44 @@ class AuthHelper {
     }
 
     const showModalWithContent = async (type) => {
-    try {
-      document.getElementById('modal-text-term').innerHTML = 'Loading...';
-      document.getElementById('modal-term').style.display = 'block';
-      Telegram.WebApp.setBackgroundColor('#00000066');
-      
-      const content = await getTerm(locale, type);
-      document.getElementById('modal-text-term').innerHTML = content;
-    } catch (error) {
-      console.error(`Error loading ${type}:`, error);
-      document.getElementById('modal-text-term').innerHTML = `Error loading ${type}`;
-    }
-  };
+      try {
+        document.getElementById('modal-text-term').innerHTML = 'Loading...';
+        document.getElementById('modal-term').style.display = 'block';
+        Telegram.WebApp.setBackgroundColor('#00000066');
+        
+        const content = await getTerm(locale, type);
+        document.getElementById('modal-text-term').innerHTML = content;
+      } catch (error) {
+        console.error(`Error loading ${type}:`, error);
+        document.getElementById('modal-text-term').innerHTML = `Error loading ${type}`;
+      }
+    };
 
-  // Add event listeners after DOM update
-  setTimeout(() => {
-    document.getElementById('terms-a')?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      await showModalWithContent("terms");
-    });
+    // Add event listeners after DOM update
+    setTimeout(() => {
+      document.getElementById('terms-a')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await showModalWithContent("terms");
+      });
 
-    document.getElementById('privacy-a')?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      await showModalWithContent("privacy");
-    });
-  }, 0);
+      document.getElementById('privacy-a')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await showModalWithContent("privacy");
+      });
+    }, 0);
 
-  // Close handlers (can be outside setTimeout as they're static elements)
-  document.getElementById('modal-close-term')?.addEventListener('click', () => {
-    document.getElementById('modal-term').style.display = 'none';
-    Telegram.WebApp.setBackgroundColor('#ffffff');
-  });
-
-  window.addEventListener('click', (event) => {
-    if (event.target === document.getElementById('modal-term')) {
+    // Close handlers (can be outside setTimeout as they're static elements)
+    document.getElementById('modal-close-term')?.addEventListener('click', () => {
       document.getElementById('modal-term').style.display = 'none';
       Telegram.WebApp.setBackgroundColor('#ffffff');
-    }
-  });
+    });
+
+    window.addEventListener('click', (event) => {
+      if (event.target === document.getElementById('modal-term')) {
+        document.getElementById('modal-term').style.display = 'none';
+        Telegram.WebApp.setBackgroundColor('#ffffff');
+      }
+    });
   }
 
   static showCodeInput(userId, phone) {
@@ -229,6 +229,18 @@ class AuthHelper {
       </div>
     `;
   }
+}
+
+async function getTerm(locale, type) {
+  alert(`get terms locale: ${locale} and type: ${type}`)
+  let response;
+  if (type == 'terms') {
+    response = await fetch(`/terms_${locale}.html`);
+  } else {
+    response = await fetch(`/privacy_${locale}.html`);
+  }
+  alert(`get response`)
+  return await response.text()
 }
 
 window.submitPhone = async function() {
@@ -582,16 +594,6 @@ async function clearCache() {
           })
       });
   alert(t('cache_cleared'));
-}
-
-async function getTerm(locale, type) {
-  let response;
-  if (type == 'terms') {
-    response = await fetch(`/terms_${locale}.html`);
-  } else {
-    response = await fetch(`/privacy_${locale}.html`);
-  }
-  return await response.text()
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
