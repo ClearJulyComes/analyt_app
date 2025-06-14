@@ -543,7 +543,6 @@ function displayResults(chatId, data) {
 
 async function updateAnalysis(chatId) {
   const loading = document.getElementById('loading');
-  const result = document.getElementById('result');
   const user = Telegram?.WebApp?.initDataUnsafe?.user;
   let locale = user?.language_code || 'en';
   if (locale != 'ru') {
@@ -551,7 +550,12 @@ async function updateAnalysis(chatId) {
   }
   
   try {
-      result.innerHTML = `<div class="loading-text">${t('update_loader')}</div>`;
+      loading.innerHTML = `
+      <div class="loading-container">
+        <div class="loading-text">${t('update_loader')}</div>
+        <div class="loading-spinner"></div>
+      </div>
+      `;
 
       const response = await fetch('/api/analyze', {
           method: 'POST',
