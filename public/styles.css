@@ -423,21 +423,38 @@ body.dark .auth-form input {
 #modal-term {
   display: none;
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  background:rgba(0,0,0,0.5);
+  z-index: 10000; /* Higher z-index */
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 10001;
 }
 
 .modal-content-term {
-  background: #ffffff;
-  margin: 10% auto;
+  position: fixed; /* Changed from absolute to fixed */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--tg-theme-bg-color, #ffffff);
+  color: var(--tg-theme-text-color, #000000);
   padding: 20px;
-  width: 80%;
+  width: 90%;
   max-width: 500px;
-  border-radius: 8px;
-  position: relative;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 10002;
 }
 
 .close-term {

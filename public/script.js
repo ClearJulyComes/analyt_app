@@ -562,22 +562,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('terms-a').addEventListener('click', async () => {
     document.getElementById('modal-text-term').innerHTML = await getTerm(locale, "terms");
     document.getElementById('modal-term').style.display = 'block';
+    Telegram.WebApp.setBackgroundColor('#00000066');
   });
 
   document.getElementById('privacy-a').addEventListener('click', async () => {
     document.getElementById('modal-text-term').innerHTML = await getTerm(locale, "privacy");
     document.getElementById('modal-term').style.display = 'block';
+    Telegram.WebApp.setBackgroundColor('#00000066');
   });
 
   // To close modal
   document.getElementById('modal-close-term').addEventListener('click', () => {
     document.getElementById('modal-term').style.display = 'none';
+    Telegram.WebApp.setBackgroundColor('#ffffff');
   });
 
   // Also close if clicking outside modal
   window.onclick = (event) => {
     if (event.target == document.getElementById('modal-term')) {
       document.getElementById('modal-term').style.display = 'none';
+      Telegram.WebApp.setBackgroundColor('#ffffff');
     }
   };
 
