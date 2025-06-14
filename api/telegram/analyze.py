@@ -207,7 +207,8 @@ async def analyze_messages(user_id, chat_id, limit=100):
                     'date': msg.date
                 })
         logger.info("new messages number: %s", len(messages))
-        if len(messages) < 2:
+        if cached and len(messages) < 2:
+            cached['is_cached'] = True
             return cached
 
         logger.info("messages load finished")
@@ -308,7 +309,6 @@ async def cache_analysis(key: str, data: dict):
     await redis.set(key, json.dumps(data))
 
 async def get_cached_analysis(key: str) -> dict:
-    """Retrieve cached analysis if exists"""
     cached = await redis.get(key)
     return json.loads(cached) if cached else None
 

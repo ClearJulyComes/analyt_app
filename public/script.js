@@ -43,7 +43,7 @@ class AuthHelper {
       }
     } catch (error) {
       console.error("Authentication error:", error);
-      alert("Authentication failed. Please try again.");
+      alert(t('auth_error'));
       this.showPhoneInput();
     }
   }
@@ -57,7 +57,7 @@ class AuthHelper {
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-content").style.display = "block";
 
-    alert("Welcome! You can choose dialog to analyze by pressing 'Analize Chat'.")
+    alert(t('welcome'))
   }
 
   static async loadChats() {
@@ -145,12 +145,12 @@ class AuthHelper {
     const container = document.getElementById("auth-container");
     container.innerHTML = `
       <div class="auth-form">
-        <label>📱 Enter your phone number:</label>
+        <label>${t('enter_phone')}</label>
         <input type="text" id="phone-input" placeholder="+1234567890" />
-        <button class="button" onclick="submitPhone()">Send Code</button>
+        <button class="button" onclick="submitPhone()">${t('send_code')}</button>
         <div class="auth-footer">
           <p class="legal-text">
-            By continuing, you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>
+            ${t('agree_description')} <a href="#">${t('terms')}</a> & <a href="#">${t('privacy')}</a>
           </p>
         </div>
       </div>
@@ -163,10 +163,10 @@ class AuthHelper {
     const container = document.getElementById("auth-container");
     container.innerHTML = `
       <div class="auth-form">
-        <p>📨 Code sent to <strong>${phone}</strong></p>
-        <label>💬 Enter the code:</label>
+        <p>${t('code_sent_to')} <strong>${phone}</strong></p>
+        <label>${t('enter_code')}</label>
         <input type="text" id="code-input" placeholder="12345" />
-        <button class="button" onclick="submitCode('${userId}', '${phone}')">Verify</button>
+        <button class="button" onclick="submitCode('${userId}', '${phone}')">${t('verify')}</button>
       </div>
     `;
     container.style.display = "block";
@@ -176,9 +176,9 @@ class AuthHelper {
     const container = document.getElementById("auth-container");
     container.innerHTML = `
       <div class="auth-form">
-        <label>🔒 Enter your 2FA password:</label>
+        <label>${t('enter_password')}</label>
         <input type="password" id="password-input" />
-        <button class="button" onclick="submitPassword('${phone}', '${code}')">Verify</button>
+        <button class="button" onclick="submitPassword('${phone}', '${code}')">${t('verify')}</button>
       </div>
     `;
   }
@@ -200,11 +200,11 @@ window.submitPhone = async function() {
     if (res.ok) {
       AuthHelper.showCodeInput(userId, phone);
     } else {
-      alert("❌ " + (data.error || "Failed to send code"));
+      alert("❌ " + (data.error || t('send_code_failed')));
     }
   } catch (error) {
     console.error("Error submitting phone:", error);
-    alert("Failed to send code. Please try again.");
+    alert(t('send_code_failed'));
   }
 };
 
@@ -221,16 +221,16 @@ window.submitCode = async function(userId, phone) {
     const data = await res.json();
 
     if (res.ok && data.ok) {
-      alert(`✅ Logged in as user ${data.userId}`);
+      alert(`${t('login_success')} ${data.userId}`);
       AuthHelper.showApp();
     } else if (data.error === "Password required") {
       AuthHelper.showPasswordInput(phone, code);
     } else {
-      alert("❌ " + (data.error || "Verification failed"));
+      alert("❌ " + (data.error || t('verification_failed')));
     }
   } catch (error) {
     console.error("Error submitting code:", error);
-    alert("Failed to verify code. Please try again.");
+    alert(t('code_verification_failed'));
   }
 };
 
@@ -247,7 +247,7 @@ window.submitPassword = async function(phone, code) {
   const data = await res.json();
 
   if (res.ok && data.ok) {
-    alert(`✅ Logged in as user ${data.userId}`);
+    alert(`${t('login_success')} ${data.userId}`);
     AuthHelper.showApp();
   } else {
     alert("❌ " + data.error);
@@ -267,7 +267,7 @@ async function analyzeRealChat() {
         console.error("[ERROR]", error);
         result.innerHTML = `
             <div class="error">
-                ${error.message || "Analysis failed"}
+                ${error.message || t('analysis_failed')}
             </div>
         `;
     } finally {
@@ -300,7 +300,7 @@ async function promptForChatId() {
     <div class="chat-modal-overlay"></div>
     <div class="chat-modal">
       <button class="chat-modal-close">&times;</button>
-      <h3 class="chat-modal-title">Select a Chat</h3>
+      <h3 class="chat-modal-title">${t('select_chat')}</h3>
       <ul class="chat-list">
         ${chats.map(chat => `
           <li class="chat-item" data-chat-id="${chat.chat_id}">
@@ -329,7 +329,7 @@ async function promptForChatId() {
       previewEl.innerHTML = cached && !cached.error ? `
         <div class="cached-preview">
           <div class="cached-preview-header">
-            <span>Last Analysis</span>
+            <span>${t('last_analysis')}</span>
             <span class="cached-preview-date">${new Date(cached.cached_at).toLocaleDateString()}</span>
           </div>
           <div class="mini-sentiment">
@@ -339,9 +339,9 @@ async function promptForChatId() {
               ).join('')}
           </div>
         </div>
-      ` : '<div class="no-cache">No previous analysis</div>';
+      ` : `<div class="no-cache">${t('no_analysis')}</div>`;
     } catch (error) {
-      previewEl.innerHTML = '<div class="no-cache">Error loading</div>';
+      previewEl.innerHTML = `<div class="no-cache">${t('error_loading')}</div>`;
     }
   }));
 
@@ -388,6 +388,15 @@ function t(key) {
           key;
 }
 
+function setText() {
+    document.querySelector("#title").innerText = t('title');
+    document.querySelector("#main_description").innerText = t('main_description');
+    document.querySelector("#logout").innerText = t('logout');
+    document.querySelector("#clear_cache").innerText = t('clear_cache');
+    document.querySelector("#analyze-btn").innerText = t('select_chat');
+    document.querySelector("#loading").innerText = t('analyzing_loader');
+}
+
 function displayResults(chatId, data) {
   const result = document.getElementById('result');
   const loading = document.getElementById('loading');
@@ -400,13 +409,13 @@ function displayResults(chatId, data) {
 
   const cachedBadge = data.is_cached ? `
     <div class="cached-badge">
-        ⏱️ Cached report (${new Date(data.cached_at).toLocaleString()})
+        ${t('cached_report')} (${new Date(data.cached_at).toLocaleString()})
     </div>
   ` : '';
 
   const updateButton = `
     <button id="update-report-btn" class="tg-button">
-        🔄 Update Report
+        ${t('update_report')}
     </button>
   `;
   loading.style.display = 'none';
@@ -417,14 +426,14 @@ function displayResults(chatId, data) {
           <h3>Chat Analysis</h3>
 
           <div class="metric">
-              <span class="metric-title">Conversation starters:</span>
+              <span class="metric-title">${t('conversation_starters')}</span>
               <div class="metric-value">
                   ${formatStats(data.starter_stats, 'Starter')}
               </div>
           </div>
 
           <div class="metric">
-              <span class="metric-title">Message counts:</span>
+              <span class="metric-title">${t('message_counts')}</span>
               <div class="metric-value">
                   ${formatStats(data.message_count, 'Messages')}
               </div>
@@ -432,14 +441,14 @@ function displayResults(chatId, data) {
 
           <div class="metric metric-flex-column">
             <div class="metric-row">
-              <span class="metric-title">Sentiment Analysis:</span>
+              <span class="metric-title">${t('sentiment_analysis')}</span>
               <div class="metric-value sentiment-summary">${formatStats(data.sentiment_summary, 'Sentiment')}</div>
             </div>
             <div class="metric-explanation">${data.sentiment_explanation}</div>
           </div>
 
           <div class="metric">
-              <span class="metric-title">Total analyzed:</span>
+              <span class="metric-title">${t('total_analysed')}</span>
               <span class="metric-value">${data.total_messages} messages</span>
           </div>
           ${updateButton}
@@ -456,7 +465,7 @@ async function updateAnalysis(chatId) {
   const result = document.getElementById('result');
   
   try {
-      result.innerHTML = '<div class="loading-text">Updating analysis...</div>';
+      result.innerHTML = `<div class="loading-text">${t('update_loader')}</div>`;
 
       const response = await fetch('/api/analyze', {
           method: 'POST',
@@ -476,14 +485,14 @@ async function updateAnalysis(chatId) {
       
   } catch (error) {
       console.error("Update failed:", error);
-      Telegram.WebApp.showAlert(`Update failed: ${error.message}`);
+      Telegram.WebApp.showAlert(`${t('update_failed')}: ${error.message}`);
   } finally {
       loading.style.display = 'none';
   }
 }
 
 async function logout() {
-  const confirmed = confirm("Are you sure you want to logout?");
+  const confirmed = confirm(t('logout_text'));
     if (!confirmed) return;
 
   await fetch('/api/delete-session', {
@@ -497,7 +506,7 @@ async function logout() {
 }
 
 async function clearCache() {
-  const confirmed = confirm("Are you sure you want to clear the cache?");
+  const confirmed = confirm(t('clear_cache_text'));
     if (!confirmed) return;
 
   await fetch('/api/cached-chats', {
@@ -507,13 +516,13 @@ async function clearCache() {
               user_id: Telegram.WebApp.initDataUnsafe.user?.id
           })
       });
-  alert('Cache cleared!');
+  alert(t('cache_cleared'));
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadTranslations();
 
-  document.querySelector("#main_description").innerText = t('main_description');
+  setText();
 
   document.getElementById('gear-button').addEventListener('click', () => {
     const menu = document.getElementById('gear-menu');
