@@ -539,10 +539,11 @@ async function clearCache() {
 }
 
 async function getTerm(locale, type) {
+  let response;
   if (type == 'terms') {
-    let response = await fetch(`/terms_${locale}.html`);
+    response = await fetch(`/terms_${locale}.html`);
   } else {
-    let response = await fetch(`/privacy_${locale}.html`);
+    response = await fetch(`/privacy_${locale}.html`);
   }
   return response;
 }
