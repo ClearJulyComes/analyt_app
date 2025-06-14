@@ -545,6 +545,7 @@ async function getTerm(locale, type) {
   } else {
     response = await fetch(`/privacy_${locale}.html`);
   }
+  alert("[DEBUG] got terms");
   return await response.text()
 }
 
@@ -555,14 +556,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const user = Telegram?.WebApp?.initDataUnsafe?.user;
   let locale = user?.language_code || 'en';
+  alert("[DEBUG] Locale tg: %s", locale);
   if (locale != 'ru') {
-      locale = 'en';
-    }
+    locale = 'en';
+  }
+
+  alert("[DEBUG] Final locale tg: %s", locale);
 
   document.getElementById('terms-a').addEventListener('click', async () => {
     document.getElementById('modal-text-term').innerHTML = await getTerm(locale, "terms");
     document.getElementById('modal-term').style.display = 'block';
     Telegram.WebApp.setBackgroundColor('#00000066');
+    alert("[DEBUG] click terms");
   });
 
   document.getElementById('privacy-a').addEventListener('click', async () => {
