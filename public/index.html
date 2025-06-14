@@ -10,12 +10,14 @@
 <body>
     <div id="auth-container"></div>
     <div id="modal-term">
-      <div class="modal-overlay"></div> <!-- Add this line -->
-      <span id="modal-close-term" class="close-term">&times;</span>
-      <div class="modal-content-term">
-        <div id="modal-text-term"></div>
-      </div>
+  <div class="modal-overlay"></div>
+  <div class="modal-wrapper"> <!-- New wrapper -->
+    <span id="modal-close-term" class="close-term">&times;</span>
+    <div class="modal-content-term">
+      <div id="modal-text-term"></div>
     </div>
+  </div>
+</div>
     <div id="app-content" style="display: none;">
         <div class="container">
             <div id="gear-container">

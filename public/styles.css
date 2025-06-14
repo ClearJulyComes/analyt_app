@@ -427,7 +427,7 @@ body.dark .auth-form input {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 10000; /* Higher z-index */
+  z-index: 10000;
 }
 
 .modal-overlay {
@@ -440,31 +440,34 @@ body.dark .auth-form input {
   z-index: 10001;
 }
 
-.modal-content-term {
-  position: fixed; /* Changed from absolute to fixed */
+.modal-wrapper {
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 450px; /* Changed from 500px to 450px */
+  max-height: 80vh;
+  z-index: 10002;
+}
+
+.modal-content-term {
   background-color: var(--tg-theme-bg-color, #ffffff);
   color: var(--tg-theme-text-color, #000000);
   padding: 20px;
-  width: 90%;
-  max-width: 500px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   max-height: 80vh;
   overflow-y: auto;
-  z-index: 10002;
 }
 
 .close-term {
-  position: fixed; /* Changed from absolute to fixed */
-  right: calc(50% - 250px + 20px); /* Adjust based on modal width */
-  top: calc(50% - 40vh + 20px); /* Adjust based on modal height */
+  position: absolute;
+  right: 20px;
+  top: 20px;
   font-size: 24px;
   cursor: pointer;
-  z-index: 10003; /* Higher than modal-content-term */
-  color: var(--tg-theme-text-color, #000000);
+  z-index: 10003;
 }
 
 body.dark .modal-content-term {
@@ -477,9 +480,12 @@ body.dark .close-term {
 }
 
 @media (max-width: 768px) {
+  .modal-wrapper {
+    width: 95%; /* Adjusted for mobile */
+    max-width: 95%; /* More flexible on mobile */
+  }
+  
   .modal-content-term {
-    width: 95%;
-    margin: 10% auto;
-    padding: 15px;
+    padding: 15px; /* Slightly less padding on mobile */
   }
 }
