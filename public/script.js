@@ -168,9 +168,11 @@ class AuthHelper {
       try {
         alert(`show modal`);
         document.getElementById('modal-text-term').innerHTML = 'Loading...';
+        alert(`show modal 2`);
         document.getElementById('modal-term').style.display = 'block';
+        alert(`show modal 3`);
         Telegram.WebApp.setBackgroundColor('#00000066');
-        alert(`click terms`);
+        alert(`show modal 4`);
         
         const content = await getTerm(locale, type);
         document.getElementById('modal-text-term').innerHTML = content;
