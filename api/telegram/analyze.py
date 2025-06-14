@@ -42,7 +42,7 @@ def parse_cached_stats(cached_dict):
             result[name] = int(match.group(1))
     return result
 
-async def get_sentiments_summary(user_blocks, cached):
+async def get_sentiments_summary(user_blocks, cached, locale):
     prompt = (
         "Analyze this conversation chronologically. For each participant:\n"
         "1. Please analyze the following chat log between two people. Focus on these key aspects:\n"
@@ -74,6 +74,37 @@ async def get_sentiments_summary(user_blocks, cached):
         "3. Provide the output in a structured format: return only strict JSON (double-quoted keys and values). The `explanation` must be a single string. Like this:\n"
         "{\"users\": [ {\"user_name1\": \"sentiment rating(max 100%) as a string\"}, {\"user_name2\": \"sentiment rating(max 100%) as a string\"} ], \"explanation\": \"full sructured information in a primary language(IMPORTANT!) from 1.1 - 1.4 as a string with every topic from new line\"}\n\n"
         "Messages in chronological order with timestamp:\n\n" + "\n\n".join(user_blocks)
+    )
+    prompt_ru = (
+        "Проанализируйте данную беседу в хронологическом порядке. Для каждого участника:\n"
+        "1. Проведите анализ представленного лога переписки между двумя людьми, сосредоточившись на ключевых аспектах:\n"
+
+        "   1.1 Анализ настроений\n"
+
+        "       - Какова общая эмоциональная окраска (позитивная/нейтральная/негативная) каждого участника?\n"
+
+        "       - Есть ли заметные изменения настроений в ходе беседы?\n"
+
+        "   1.2 Анализ времени ответа\n"
+
+        "       - Кто отвечает быстрее в среднем? (Рассчитайте среднее время ответа для каждого.)\n"
+
+        "       - Есть ли длительные задержки, которые могут указывать на отсутствие интереса или отвлечение?\n"
+
+        "   1.3 Выявление конфликтов и согласий\n"
+
+        "       - Определите моменты напряжения или разногласий (например, сарказм, конфронтационные высказывания).\n"
+
+        "       - Отметьте случаи взаимопонимания (например, взаимная поддержка, совпадение мнений).\n"
+
+        "   1.4 Психологический портрет\n"
+
+        "       - На основе языковых паттернов определите черты личности (например, напористость, эмпатия, защитная позиция).\n"
+
+        "       - Отметьте стили общения (например, прямой, пассивный, аналитический, эмоциональный).\n"
+        "2. Предоставьте вывод в строгом JSON-формате (ключи и значения в двойных кавычках). Поле `explanation` должно быть единой строкой. Пример:\n"
+        "{\"users\": [ {\"user_name1\": \"оценка тональности (макс 100%) как строка\"}, {\"user_name2\": \"оценка тональности (макс 100%) как строка\"} ], \"explanation\": \"полная структурированная информация на основном языке (ВАЖНО!) по пунктам 1.1-1.4 в виде строки с переносами по темам\"}\n\n"
+        "Сообщения в хронологическом порядке с временными метками:\n\n" + "\n\n".join(user_blocks)
     )
     if cached:
         prompt = (
@@ -109,6 +140,38 @@ async def get_sentiments_summary(user_blocks, cached):
             "Messages in chronological order with timestamp:\n\n" + "\n\n".join(user_blocks) + "\n\n"
             "This is previous summary:\n\n" + "\n".join(cached['sentiment_explanation'])
             )
+        prompt_ru = (
+            "Проанализируйте данную беседу в хронологическом порядке с учётом предыдущего анализа. Для каждого участника:\n"
+            "1. Проведите анализ представленного лога переписки между двумя людьми и их предыдущего анализа. Основные аспекты для оценки (включая изменения с прошлого анализа):\n"
+
+            "   1.1 Анализ эмоциональной тональности\n"
+
+            "       - Какая общая эмоциональная окраска (позитивная/нейтральная/негативная) у каждого участника?\n"
+
+            "       - Наблюдаются ли заметные изменения тональности в ходе диалога?\n"
+
+            "   1.2 Анализ времени ответа\n"
+
+            "       - Кто отвечает быстрее в среднем? (Рассчитайте среднее время ответа для каждого.)\n"
+
+            "       - Присутствуют ли длительные паузы, которые могут свидетельствовать о потере интереса или отвлечении?\n"
+
+            "   1.3 Выявление согласия и конфликтов\n"
+
+            "       - Определите моменты напряжения или разногласий (сарказм, конфронтационные формулировки).\n"
+
+            "       - Отметьте случаи согласия (взаимная поддержка, совпадение взглядов).\n"
+
+            "   1.4 Психологический профиль\n"
+
+            "       - На основе языковых паттернов выявите черты личности (напористость, эмпатия, оборонительная позиция).\n"
+
+            "       - Зафиксируйте стили коммуникации (прямой, пассивный, аналитический, эмоциональный).\n"
+            "2. Предоставьте результат в строгом JSON-формате (ключи и значения в двойных кавычках). Поле `explanation` должно быть единой строкой. Пример:\n"
+            "{\"users\": [ {\"user_name1\": \"оценка тональности (макс 100%) как строка\"}, {\"user_name2\": \"оценка тональности (макс 100%) как строка\"} ], \"explanation\": \"полная структурированная информация на основном языке (ВАЖНО!) по пунктам 1.1-1.4 в виде строки с разделением по темам\"}\n\n"
+            "Сообщения в хронологическом порядке с временными метками:\n\n" + "\n\n".join(user_blocks) + "\n\n"
+            "Предыдущий анализ:\n\n" + "\n".join(cached['sentiment_explanation'])
+            )
 
     headers = {
         "Authorization": f"Bearer {os.getenv('DEEPSEEK_API_KEY')}",
@@ -117,7 +180,7 @@ async def get_sentiments_summary(user_blocks, cached):
 
     payload = {
         "model": "deepseek-chat",
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": [{"role": "user", "content": prompt_ru if locale == 'ru' else prompt}],
         "temperature": 0.3
     }
 
@@ -152,7 +215,7 @@ async def get_sentiments_summary(user_blocks, cached):
             return {}, ""
 
 
-async def analyze_messages(user_id, chat_id, limit=100):
+async def analyze_messages(user_id, chat_id, limit=100, locale):
     http_client = httpx.AsyncClient()
     try:
         response = await http_client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
@@ -280,7 +343,8 @@ async def analyze_messages(user_id, chat_id, limit=100):
             for name, count in cached_starter_counts.items():
                 starter_counts_by_name[name] += count
 
-        sentiment_summary, explanation = await get_sentiments_summary(user_blocks, cached)
+        logger.info('user blocks: %s', user_blocks)
+        sentiment_summary, explanation = await get_sentiments_summary(user_blocks, cached, locale)
 
         await client.disconnect()
         result = {
@@ -321,6 +385,7 @@ async def analyze_endpoint():
         chat_id = data.get("chat_id")
         limit = data.get("limit", 100)
         force_refresh = data.get("force_refresh", False)
+        locale = data.get("locale", "en")
 
         cache_key = f"tganalysis:{user_id}:{chat_id}"
 
@@ -338,7 +403,7 @@ async def analyze_endpoint():
         if not user_id or not chat_id:
             return jsonify({"error": "Missing user_id or chat_id"}), 400
 
-        result = await analyze_messages(user_id, chat_id, limit)
+        result = await analyze_messages(user_id, chat_id, limit, locale)
         logger.info("analyze ended")
         return jsonify(result)
     except Exception as e:

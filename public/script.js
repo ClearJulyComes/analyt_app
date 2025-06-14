@@ -334,18 +334,24 @@ async function analyzeRealChat() {
 }
 
 async function fetchAnalysis(chatId) {
-    const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            user_id: Telegram.WebApp.initDataUnsafe.user?.id,
-            chat_id: parseInt(chatId),
-            limit: 600,
-            force_refresh: true
-        })
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return response.json();
+  const user = Telegram?.WebApp?.initDataUnsafe?.user;
+  let locale = user?.language_code || 'en';
+  if (locale != 'ru') {
+    locale = 'en';
+  }
+  const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+          user_id: Telegram.WebApp.initDataUnsafe.user?.id,
+          chat_id: parseInt(chatId),
+          limit: 600,
+          force_refresh: true,
+          locale: locale
+      })
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return response.json();
 }
 
 async function promptForChatId() {
@@ -538,6 +544,11 @@ function displayResults(chatId, data) {
 async function updateAnalysis(chatId) {
   const loading = document.getElementById('loading');
   const result = document.getElementById('result');
+  const user = Telegram?.WebApp?.initDataUnsafe?.user;
+  let locale = user?.language_code || 'en';
+  if (locale != 'ru') {
+    locale = 'en';
+  }
   
   try {
       result.innerHTML = `<div class="loading-text">${t('update_loader')}</div>`;
@@ -549,7 +560,8 @@ async function updateAnalysis(chatId) {
               user_id: Telegram.WebApp.initDataUnsafe.user?.id,
               chat_id: parseInt(chatId),
               limit: 600,
-              force_refresh: true
+              force_refresh: true,
+              locale: locale
           })
       });
 
