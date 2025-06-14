@@ -545,7 +545,7 @@ async function getTerm(locale, type) {
   } else {
     response = await fetch(`/privacy_${locale}.html`);
   }
-  return response;
+  response await response.text()
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
