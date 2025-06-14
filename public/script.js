@@ -166,13 +166,8 @@ class AuthHelper {
 
     const showModalWithContent = async (type) => {
       try {
-        alert(`show modal`);
         document.getElementById('modal-text-term').innerHTML = 'Loading...';
-        alert(`show modal 2`);
         document.getElementById('modal-term').style.display = 'block';
-        alert(`show modal 3`);
-        Telegram.WebApp.setBackgroundColor('#00000066');
-        alert(`show modal 4`);
         
         const content = await getTerm(locale, type);
         document.getElementById('modal-text-term').innerHTML = content;
@@ -185,7 +180,6 @@ class AuthHelper {
     // Add event listeners after DOM update
     setTimeout(() => {
       document.getElementById('terms-a')?.addEventListener('click', async () => {
-        alert(`click terms`);
         await showModalWithContent("terms");
       });
 
@@ -235,7 +229,6 @@ class AuthHelper {
 }
 
 async function getTerm(locale, type) {
-  alert(`get terms locale: ${locale} and type: ${type}`)
   let response;
   if (type == 'terms') {
     response = await fetch(`/terms_${locale}.html`);
@@ -245,7 +238,6 @@ async function getTerm(locale, type) {
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
   }
-  alert(`get response`)
   return await response.text()
 }
 
