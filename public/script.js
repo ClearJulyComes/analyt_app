@@ -166,6 +166,7 @@ class AuthHelper {
 
     const showModalWithContent = async (type) => {
       try {
+        alert(`show modal`);
         document.getElementById('modal-text-term').innerHTML = 'Loading...';
         document.getElementById('modal-term').style.display = 'block';
         Telegram.WebApp.setBackgroundColor('#00000066');
@@ -181,14 +182,12 @@ class AuthHelper {
 
     // Add event listeners after DOM update
     setTimeout(() => {
-      document.getElementById('terms-a')?.addEventListener('click', async (e) => {
+      document.getElementById('terms-a')?.addEventListener('click', async () => {
         alert(`click terms`);
-        e.preventDefault();
         await showModalWithContent("terms");
       });
 
-      document.getElementById('privacy-a')?.addEventListener('click', async (e) => {
-        e.preventDefault();
+      document.getElementById('privacy-a')?.addEventListener('click', async () => {
         await showModalWithContent("privacy");
       });
     }, 0);
