@@ -2,6 +2,7 @@ from quart import Quart, request, jsonify
 from upstash_redis import Redis
 import os
 import logging
+import httpx
 import base64  # optional, in case decoding is reused elsewhere
 
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +23,7 @@ async def delete_session():
 
     if not user_id:
         return jsonify({"error": "Missing userId"}), 400
+    http_client = httpx.AsyncClient()
 
     try:
         response = await http_client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
