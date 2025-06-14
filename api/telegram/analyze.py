@@ -215,7 +215,7 @@ async def get_sentiments_summary(user_blocks, cached, locale):
             return {}, ""
 
 
-async def analyze_messages(user_id, chat_id, limit=100, locale):
+async def analyze_messages(user_id, chat_id, locale, limit=100):
     http_client = httpx.AsyncClient()
     try:
         response = await http_client.get(f"{WEBAPP_URL}/api/get-userinfo", params={"userId": user_id})
@@ -403,7 +403,7 @@ async def analyze_endpoint():
         if not user_id or not chat_id:
             return jsonify({"error": "Missing user_id or chat_id"}), 400
 
-        result = await analyze_messages(user_id, chat_id, limit, locale)
+        result = await analyze_messages(user_id, chat_id, locale, limit)
         logger.info("analyze ended")
         return jsonify(result)
     except Exception as e:
