@@ -540,6 +540,7 @@ async function clearCache() {
 
 async function getTerm(locale, type) {
   let response;
+  alert(`[DEBUG] type: ${type}`);
   if (type == 'terms') {
     alert("[DEBUG] request terms");
     response = await fetch(`/terms_${locale}.html`);
@@ -557,12 +558,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const user = Telegram?.WebApp?.initDataUnsafe?.user;
   let locale = user?.language_code || 'en';
-  alert("[DEBUG] Locale tg: ${locale}");
+  alert(`[DEBUG] Locale tg: ${locale}`);
   if (locale != 'ru') {
     locale = 'en';
   }
 
-  alert("[DEBUG] Final locale tg: ${locale}");
+  alert(`[DEBUG] Final locale tg: ${locale}`);
 
   document.getElementById('terms-a').addEventListener('click', async () => {
     document.getElementById('modal-text-term').innerHTML = await getTerm(locale, "terms");
