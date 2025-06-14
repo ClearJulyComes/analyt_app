@@ -151,7 +151,7 @@ class AuthHelper {
         <button class="button" onclick="submitPhone()">${t('send_code')}</button>
         <div class="auth-footer">
           <p class="legal-text">
-            ${t('agree_description')} <span id="terms-span">${t('terms')}</span> & <span id="privacy-span">${t('privacy')}</span>
+            ${t('agree_description')} <a href="#"id="terms-span">${t('terms')}</a> & <a href="#" id="privacy-span">${t('privacy')}</a>
           </p>
         </div>
       </div>
@@ -558,12 +558,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       locale = 'en';
     }
 
-  document.getElementById('terms-span').addEventListener('click', () => {
+  document.getElementById('terms-a').addEventListener('click', async () => {
     document.getElementById('modal-text-term').innerHTML = getTerm(locale, "terms");
     document.getElementById('modal-term').style.display = 'block';
   });
 
-  document.getElementById('privacy-span').addEventListener('click', () => {
+  document.getElementById('privacy-a').addEventListener('click', async () => {
     document.getElementById('modal-text-term').innerHTML = getTerm(locale, "privacy");
     document.getElementById('modal-term').style.display = 'block';
   });

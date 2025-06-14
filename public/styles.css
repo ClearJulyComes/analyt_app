@@ -419,3 +419,31 @@ body.dark .auth-form input {
 .hidden {
   display: none !important;
 }
+
+.modal-term {
+  display: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background:rgba(0,0,0,0.5);
+}
+
+.modal-content-term {
+  background: #ffffff;
+  margin: 10% auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.close-term {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  font-size: 24px;
+  cursor: pointer;
+}
