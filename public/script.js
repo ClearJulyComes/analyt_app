@@ -157,6 +157,52 @@ class AuthHelper {
       </div>
     `;
     container.style.display = "block";
+
+    const user = Telegram?.WebApp?.initDataUnsafe?.user;
+    let locale = user?.language_code || 'en';
+    if (locale != 'ru') {
+      locale = 'en';
+    }
+
+    const showModalWithContent = async (type) => {
+    try {
+      document.getElementById('modal-text-term').innerHTML = 'Loading...';
+      document.getElementById('modal-term').style.display = 'block';
+      Telegram.WebApp.setBackgroundColor('#00000066');
+      
+      const content = await getTerm(locale, type);
+      document.getElementById('modal-text-term').innerHTML = content;
+    } catch (error) {
+      console.error(`Error loading ${type}:`, error);
+      document.getElementById('modal-text-term').innerHTML = `Error loading ${type}`;
+    }
+  };
+
+  // Add event listeners after DOM update
+  setTimeout(() => {
+    document.getElementById('terms-a')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await showModalWithContent("terms");
+    });
+
+    document.getElementById('privacy-a')?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await showModalWithContent("privacy");
+    });
+  }, 0);
+
+  // Close handlers (can be outside setTimeout as they're static elements)
+  document.getElementById('modal-close-term')?.addEventListener('click', () => {
+    document.getElementById('modal-term').style.display = 'none';
+    Telegram.WebApp.setBackgroundColor('#ffffff');
+  });
+
+  window.addEventListener('click', (event) => {
+    if (event.target === document.getElementById('modal-term')) {
+      document.getElementById('modal-term').style.display = 'none';
+      Telegram.WebApp.setBackgroundColor('#ffffff');
+    }
+  });
   }
 
   static showCodeInput(userId, phone) {
@@ -540,14 +586,11 @@ async function clearCache() {
 
 async function getTerm(locale, type) {
   let response;
-  alert(`[DEBUG] type: ${type}`);
   if (type == 'terms') {
-    alert("[DEBUG] request terms");
     response = await fetch(`/terms_${locale}.html`);
   } else {
     response = await fetch(`/privacy_${locale}.html`);
   }
-  alert("[DEBUG] got terms");
   return await response.text()
 }
 
@@ -555,42 +598,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadTranslations();
 
   setText();
-
-  const user = Telegram?.WebApp?.initDataUnsafe?.user;
-  let locale = user?.language_code || 'en';
-  alert(`[DEBUG] Locale tg: ${locale}`);
-  if (locale != 'ru') {
-    locale = 'en';
-  }
-
-  alert(`[DEBUG] Final locale tg: ${locale}`);
-
-  document.getElementById('terms-a').addEventListener('click', async () => {
-    document.getElementById('modal-text-term').innerHTML = await getTerm(locale, "terms");
-    document.getElementById('modal-term').style.display = 'block';
-    Telegram.WebApp.setBackgroundColor('#00000066');
-    alert("[DEBUG] click terms");
-  });
-
-  document.getElementById('privacy-a').addEventListener('click', async () => {
-    document.getElementById('modal-text-term').innerHTML = await getTerm(locale, "privacy");
-    document.getElementById('modal-term').style.display = 'block';
-    Telegram.WebApp.setBackgroundColor('#00000066');
-  });
-
-  // To close modal
-  document.getElementById('modal-close-term').addEventListener('click', () => {
-    document.getElementById('modal-term').style.display = 'none';
-    Telegram.WebApp.setBackgroundColor('#ffffff');
-  });
-
-  // Also close if clicking outside modal
-  window.onclick = (event) => {
-    if (event.target == document.getElementById('modal-term')) {
-      document.getElementById('modal-term').style.display = 'none';
-      Telegram.WebApp.setBackgroundColor('#ffffff');
-    }
-  };
 
   document.getElementById('gear-button').addEventListener('click', () => {
     const menu = document.getElementById('gear-menu');
