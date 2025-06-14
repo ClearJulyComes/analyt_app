@@ -309,6 +309,8 @@ async function promptForChatId() {
         const data = await res.json();
         chats = data.chats;
       }
+    } catch (error) {
+      console.error("[ERROR]", error);
     }
   }
 
