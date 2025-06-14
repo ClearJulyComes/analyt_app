@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setText();
 
   const user = Telegram?.WebApp?.initDataUnsafe?.user;
-  const locale = user?.language_code || 'en';
+  let locale = user?.language_code || 'en';
   if (locale != 'ru') {
       locale = 'en';
     }
