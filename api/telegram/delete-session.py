@@ -15,6 +15,9 @@ redis = Redis(
     url=os.environ["UPSTASH_REDIS_REST_URL"],
     token=os.environ["UPSTASH_REDIS_REST_TOKEN"]
 )
+WEBAPP_URL = os.getenv('WEBAPP_URL')
+TELEGRAM_API_ID = int(os.getenv('TELEGRAM_API_ID'))
+TELEGRAM_API_HASH = os.getenv('TELEGRAM_API_HASH')
 
 @app.route('/api/delete-session', methods=['POST'])
 async def delete_session():
