@@ -146,6 +146,7 @@ class AuthHelper {
     const container = document.getElementById("auth-container");
     container.innerHTML = `
       <div class="auth-form">
+        <p class="disclamer">${t('disclamer')}</p>
         <label>${t('enter_phone')}</label>
         <input type="text" id="phone-input" placeholder="+1234567890" value="+7" />
         <button class="button" onclick="submitPhone()">${t('send_code')}</button>

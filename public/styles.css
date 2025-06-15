@@ -537,3 +537,8 @@ body.dark .loading-text {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.disclamer {
+  font-size: 13px;
+  color: var(--system-gray);
+}
