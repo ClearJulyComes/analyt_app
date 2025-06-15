@@ -311,14 +311,12 @@ window.submitPassword = async function(phone, code) {
   }
 }
 
-async function analyzeRealChat() {
+async function selectChat() {
     const loading = document.getElementById('loading');
+    const button = document.getElementById('analyze-btn');
     const result = document.getElementById('result');
     
     try {
-        loading.style.display = 'block';
-        result.innerHTML = '';
-
         await promptForChatId();
     } catch (error) {
         console.error("[ERROR]", error);
@@ -329,6 +327,7 @@ async function analyzeRealChat() {
         `;
     } finally {
         loading.style.display = 'none';
+        button.style.display = 'block';
         console.log("[DEBUG] Analysis completed");
     }
 }
@@ -350,11 +349,22 @@ async function fetchAnalysis(chatId) {
           locale: locale
       })
   });
-  if (!response.ok) throw new Error(await response.text());
+  if (!response.ok) {
+    AuthHelper.init();
+    throw new Error(await response.text());
+  }
   return response.json();
 }
 
 async function promptForChatId() {
+  const loading = document.getElementById('loading');
+  const result = document.getElementById('result');
+  const button = document.getElementById('analyze-btn');
+
+  loading.style.display = 'block';
+  result.style.display = 'none'
+  button.style.display = 'none'
+
   const cachedChats = window.__cachedChats;
   let chats;
   if (cachedChats) {
@@ -398,6 +408,7 @@ async function promptForChatId() {
     </div>
   `;
   modal.style.display = 'block';
+  loading.style.display = 'none';
 
   const getCachedAnalysis = async (chatId) => {
     return window.__cachedAnalyse?.get(chatId) || await AuthHelper.loadCachedChat(chatId);
@@ -495,6 +506,7 @@ function setText() {
 function displayResults(chatId, data) {
   const result = document.getElementById('result');
   const loading = document.getElementById('loading');
+  const button = document.getElementById('analyze-btn');
   if (!result) return;
   const formatStats = (stats, label) => {
     return Object.entries(stats)
@@ -515,6 +527,7 @@ function displayResults(chatId, data) {
   `;
   loading.style.display = 'none';
   result.style.display = 'block';
+  button.style.display = 'block';
 
   result.innerHTML = `
       <div class="analysis-card">
@@ -559,6 +572,7 @@ function displayResults(chatId, data) {
 async function updateAnalysis(chatId) {
   const loading = document.getElementById('loading');
   const result = document.getElementById('result');
+  const button = document.getElementById('analyze-btn');
   const user = Telegram?.WebApp?.initDataUnsafe?.user;
   let locale = user?.language_code || 'en';
   if (locale != 'ru') {
@@ -573,6 +587,7 @@ async function updateAnalysis(chatId) {
       </div>
       `;
       result.style.display = 'none';
+      button.style.display = 'none';
       loading.style.display = 'block';
 
       const response = await fetch('/api/analyze', {
@@ -595,8 +610,10 @@ async function updateAnalysis(chatId) {
   } catch (error) {
       console.error("Update failed:", error);
       Telegram.WebApp.showAlert(`${t('update_failed')}: ${error.message}`);
+      AuthHelper.init()
   } finally {
       loading.style.display = 'none';
+      button.style.display = 'block';
   }
 }
 
@@ -626,6 +643,7 @@ async function clearCache() {
           })
       });
   alert(t('cache_cleared'));
+  AuthHelper.showApp()
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -648,6 +666,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('analyze-btn').addEventListener('click', () => {
       console.log("[DEBUG] Analyze button clicked");
-      analyzeRealChat().catch(console.error);
+      selectChat().catch(console.error);
   });
 });
